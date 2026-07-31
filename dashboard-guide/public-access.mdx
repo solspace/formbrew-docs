@@ -1,0 +1,55 @@
+---
+title: "Public access"
+description: "Configure allowed website origins and public form tokens."
+---
+
+# Public access
+
+Public access has two controls that work together:
+
+- **Allowed origins** define which websites may fetch and submit the form.
+- **Form access tokens** identify the form in public URLs and SDK configuration.
+
+A form must also be published. A token by itself does not make a draft form public.
+
+## Allowed origins
+
+Add one origin for every website environment that will use the form. An origin contains only the scheme, hostname, and optional non-default port.
+
+```text
+https://www.example.com
+https://staging.example.com
+http://localhost:5173
+```
+
+Paths, queries, and fragments are removed when an origin is saved. Wildcards are not supported: a value such as `https://*.example.com` does not match requests from its subdomains. Add each subdomain explicitly.
+
+<Warning>
+  `https://example.com` and `https://www.example.com` are different origins. Localhost ports are also distinct, so add the exact port used by your development server.
+</Warning>
+
+The browser supplies `Origin` automatically. The public API uses `Referer` only when `Origin` is absent. Non-browser clients must send the configured website origin explicitly.
+
+## Public form tokens
+
+Select **Add new access token**, enter an optional name, and select **Generate token**. Use names such as `Production website` or `Local development` so you can identify where a token is used.
+
+Tokens can be copied from the token table after creation. The table also shows creation time, last use, and whether a token is active, revoked, or expired.
+
+<Note>
+  Public form tokens are safe to include in HTML and browser JavaScript. They identify a form; they are not account credentials or management API secrets.
+</Note>
+
+## Revoke a token
+
+Select **Revoke** and confirm the action. Revocation cannot be undone. Existing integrations using that token begin receiving an unauthorized response, so replace the token in deployed clients before revoking it when you need a planned rotation.
+
+## Publish checklist
+
+Before publishing, verify that:
+
+- At least one allowed origin is saved.
+- Every production and staging hostname is listed separately.
+- At least one active token exists for the integration.
+- Field keys and option values are ready for downstream consumers.
+- A real submission succeeds from the deployed website.

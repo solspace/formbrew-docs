@@ -1,0 +1,138 @@
+---
+title: "JavaScript SDK"
+description: "Use the typed Formbrew client and managed DOM renderer."
+---
+
+# JavaScript SDK
+
+`@formbrew/js` includes a typed headless client, a managed DOM renderer, framework-neutral form helpers, and optional styles.
+
+## Install
+
+<CodeGroup>
+```bash npm
+npm install @formbrew/js
+```
+
+```bash pnpm
+pnpm add @formbrew/js
+```
+
+```bash yarn
+yarn add @formbrew/js
+```
+
+```bash bun
+bun add @formbrew/js
+```
+</CodeGroup>
+
+## Managed DOM form
+
+```html
+<div id="contact-form"></div>
+```
+
+```ts
+import { createFormbrewClient } from "@formbrew/js";
+import { mountFormbrewForm } from "@formbrew/js/dom";
+import "@formbrew/js/styles.css";
+
+const client = createFormbrewClient({
+  baseUrl: "https://api.staging.formbrew.com/v1",
+  token: "YOUR_PUBLIC_TOKEN",
+});
+
+const controller = await mountFormbrewForm("#contact-form", {
+  client,
+  metadata: () => ({ source: window.location.pathname }),
+  onSuccess(result) {
+    console.log(result.id, result.message);
+  },
+  onError(error) {
+    console.error(error.code, error.message);
+  },
+});
+```
+
+The renderer fetches the definition, creates semantic native controls, adds the honeypot, applies supported browser validation, prevents duplicate in-flight submissions, resets after success, and displays status messages.
+
+Call `controller.reset()` to clear the form or `controller.destroy()` before removing the host view.
+
+## Headless client
+
+Use the client alone when your application renders fields itself:
+
+```ts
+import { createFormbrewClient } from "@formbrew/js";
+
+const client = createFormbrewClient({
+  baseUrl: "https://api.staging.formbrew.com/v1",
+  token: "YOUR_PUBLIC_TOKEN",
+});
+const definition = await client.fetchForm();
+
+console.log(definition.fields);
+
+const result = await client.submit(
+  {
+    email: "hello@example.com",
+    interests: ["product", "pricing"],
+  },
+  {
+    metadata: { source: "contact-page" },
+  },
+);
+
+console.log(result.message);
+```
+
+## Client configuration
+
+| Option | Purpose |
+| --- | --- |
+| `token` | Required public form token. |
+| `baseUrl` | API base URL. Use `https://api.staging.formbrew.com/v1` during staging. |
+| `origin` | Explicit website origin for Node, Bun, SSR, or other non-browser use. |
+| `fetch` | Custom Fetch-compatible implementation. |
+
+Browser requests receive `Origin` automatically. Non-browser requests must supply an origin that is configured on the form:
+
+```ts
+const client = createFormbrewClient({
+  baseUrl: "https://api.staging.formbrew.com/v1",
+  token: process.env.FORMBREW_TOKEN!,
+  origin: "https://www.example.com",
+});
+```
+
+## Cancellation
+
+Both network methods accept an `AbortSignal`:
+
+```ts
+const abortController = new AbortController();
+
+const request = client.fetchForm({ signal: abortController.signal });
+abortController.abort();
+
+await request;
+```
+
+Native `AbortError` exceptions are preserved.
+
+## Errors
+
+```ts
+import { FormbrewError } from "@formbrew/js";
+
+try {
+  await client.submit({ email: "not-an-email" });
+} catch (error) {
+  if (error instanceof FormbrewError) {
+    console.error(error.code, error.status, error.details);
+  }
+}
+```
+
+`FormbrewError` normalizes API errors, unsuccessful HTTP responses, network failures, malformed responses, and configuration failures.

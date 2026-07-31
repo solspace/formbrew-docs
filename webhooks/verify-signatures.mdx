@@ -1,0 +1,163 @@
+---
+title: "Verify webhook signatures"
+description: "Authenticate Formbrew webhook payloads and protect your receiver from tampering and replay attacks."
+---
+
+# Verify webhook signatures
+
+Never trust a webhook payload until its signature and timestamp have been verified. Signature validation proves that a request was created with your endpoint secret and that its exact body has not changed in transit.
+
+TLS protects a request while it travels over the network. The webhook signature independently authenticates the sender and payload at your application boundary.
+
+## Signature format
+
+Formbrew calculates HMAC-SHA256 over this byte sequence:
+
+```text
+<Formbrew-Timestamp>.<exact raw request body>
+```
+
+It sends the lowercase hexadecimal digest as:
+
+```text
+Formbrew-Signature: v1=<64 lowercase hexadecimal characters>
+```
+
+The timestamp text and period are UTF-8 bytes. The body portion is the exact request body received over HTTP. Whitespace, line endings, character encoding, or JSON key ordering changes produce a different signature.
+
+## Validation procedure
+
+1. Read `Formbrew-Timestamp` and require a nonnegative integer in Unix seconds.
+2. Reject timestamps more than five minutes in the past or future.
+3. Read the body without decoding, parsing, reformatting, or serializing it.
+4. Compute HMAC-SHA256 with the endpoint's complete `whsec_...` secret.
+5. Format the expected signature as `v1=<hex digest>`.
+6. Compare the expected and received signatures in constant time.
+7. Only after the comparison succeeds, parse and validate the JSON payload.
+8. Require `Formbrew-Delivery-Id` to match the payload `id` and `Formbrew-Event` to match the payload `type`.
+9. Deduplicate the accepted delivery ID in durable storage.
+
+The timestamp check limits replay attempts, but it does not replace delivery-ID deduplication. A signed request can be replayed within the accepted time window.
+
+## Node.js and Bun example
+
+This implementation accepts raw bytes and does not depend on a framework:
+
+```ts
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+type VerifyFormbrewSignatureOptions = {
+  now?: Date;
+  rawBody: Uint8Array;
+  secret: string;
+  signature: string | null;
+  timestamp: string | null;
+  toleranceSeconds?: number;
+};
+
+export const verifyFormbrewSignature = (
+  options: VerifyFormbrewSignatureOptions,
+): boolean => {
+  const toleranceSeconds = options.toleranceSeconds ?? 300;
+
+  if (!options.timestamp || !/^\d+$/.test(options.timestamp)) {
+    return false;
+  }
+
+  const timestamp = Number(options.timestamp);
+
+  if (!Number.isSafeInteger(timestamp) || timestamp < 0) {
+    return false;
+  }
+
+  const nowSeconds = Math.floor((options.now ?? new Date()).getTime() / 1000);
+
+  if (Math.abs(nowSeconds - timestamp) > toleranceSeconds) {
+    return false;
+  }
+
+  if (!options.signature || !/^v1=[a-f0-9]{64}$/.test(options.signature)) {
+    return false;
+  }
+
+  const digest = createHmac("sha256", options.secret)
+    .update(options.timestamp, "utf8")
+    .update(".", "utf8")
+    .update(options.rawBody)
+    .digest("hex");
+  const expected = Buffer.from(`v1=${digest}`, "utf8");
+  const received = Buffer.from(options.signature, "utf8");
+
+  if (expected.length !== received.length) {
+    return false;
+  }
+
+  return timingSafeEqual(expected, received);
+};
+```
+
+With Bun's HTTP server, obtain the bytes before parsing:
+
+```ts
+const rawBody = new Uint8Array(await request.arrayBuffer());
+const valid = verifyFormbrewSignature({
+  rawBody,
+  secret: process.env.WEBHOOK_SIGNING_SECRET!,
+  signature: request.headers.get("formbrew-signature"),
+  timestamp: request.headers.get("formbrew-timestamp"),
+});
+```
+
+With Express, mount `express.raw()` on the webhook route before any JSON body parser consumes it:
+
+```ts
+app.post("/webhooks/formbrew", express.raw({ type: "application/json" }), (request, response) => {
+  const valid = verifyFormbrewSignature({
+    rawBody: request.body,
+    secret: process.env.WEBHOOK_SIGNING_SECRET!,
+    signature: request.get("Formbrew-Signature") ?? null,
+    timestamp: request.get("Formbrew-Timestamp") ?? null,
+  });
+
+  if (!valid) {
+    response.sendStatus(401);
+    return;
+  }
+
+  const event = JSON.parse(request.body.toString("utf8"));
+  // Validate and durably enqueue the event before acknowledging it.
+  response.sendStatus(204);
+});
+```
+
+If middleware has already parsed the body into an object, serializing that object again is not safe. Configure your framework to retain the original bytes for this route.
+
+## Secret rotation
+
+Rotate a secret immediately if it may have been exposed. Formbrew shows the new secret once. Rotation cancels deliveries that are queued for the endpoint, and new deliveries use the new secret. An attempt already in progress may finish with the previous secret.
+
+For a planned rotation:
+
+1. Confirm no deliveries are queued or waiting to retry, then choose a quiet period.
+2. Rotate the secret and copy it immediately.
+3. Configure receivers to accept the new and previous secrets temporarily.
+4. Send a new test submission and confirm it validates with the new secret.
+5. Remove the previous secret after all requests that were already in progress have finished.
+
+This cutover is not atomic. A new delivery created after rotation but before every receiver has the new secret can receive a permanent `401`. Formbrew does not currently provide an overlapping-secret grace period, so do not rotate during active traffic if that loss is unacceptable. Retaining the previous secret only protects requests that were already in progress.
+
+Disabling the endpoint does not preserve queued deliveries. Disabling and rotation both cancel pending work, and submissions accepted while the endpoint is disabled do not create deliveries for it.
+
+Never identify a secret by storing its full value in logs. Use the endpoint's eight-character secret hint when checking which configuration is deployed.
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+| --- | --- |
+| Every signature fails | Wrong endpoint secret or body parser changed the raw bytes |
+| Only some signatures fail | Multiple receiver instances use different secrets |
+| Timestamp is always stale | Server clock is incorrect or processing happens before validation for too long |
+| Valid events cause duplicate work | Delivery IDs are not stored with a durable unique constraint |
+| Formbrew does not retry | Receiver returned a permanent `4xx` response |
+
+When working from source, use the local harness in `test/harness/webhooks` to compare the received bytes, headers, and each validation step against a real delivery.

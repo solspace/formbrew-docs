@@ -1,0 +1,57 @@
+---
+title: "Frontend quickstart"
+description: "Prepare a form and connect it to a website in a few steps."
+---
+
+# Frontend quickstart
+
+## Before you integrate
+
+Your form needs all three public-access requirements:
+
+1. **Published status** so the public API can load it.
+2. **Allowed origin** matching the website that makes the request.
+3. **Active public token** used in the endpoint or SDK configuration.
+
+Open the form's **View integration guide** page in the dashboard to copy examples with your selected token and current field markup.
+
+## Fastest setup
+
+Place the generated embed script where the form should appear:
+
+```html
+<script
+  crossorigin="anonymous"
+  defer
+  integrity="sha384-iTXCBbm6ZFJtVjznaAtvkZ1QX0PY7m+ZZL4nECY+PN0Tpo3siEhbwW5BJe+WWot9"
+  src="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.1.0-beta.1/dist/embed.js"
+  data-formbrew-token="YOUR_PUBLIC_TOKEN"
+  data-formbrew-base-url="https://api.staging.formbrew.com/v1"
+></script>
+```
+
+The script fetches the current definition, renders the fields, includes the honeypot, validates values, submits in place, and displays the configured success message.
+
+## Verify the integration
+
+Test from the actual website or local development origin you added in the dashboard.
+
+1. Open the browser developer tools and reload the page.
+2. Confirm `GET /v1/forms/YOUR_PUBLIC_TOKEN` returns `200`.
+3. Submit valid values.
+4. Confirm `POST /v1/forms/YOUR_PUBLIC_TOKEN/submit` returns `201`.
+5. Open **Submissions** in the dashboard and confirm the entry appears.
+
+## Common first-run errors
+
+| Status | Cause | Fix |
+| --- | --- | --- |
+| `401` | Token is revoked or expired | Select or generate an active token |
+| `403` | Website origin is missing or not allowed | Add the exact scheme, hostname, and port |
+| `404` | Token is unknown or the form is not published | Publish the form and verify the token |
+| `400` | Submitted values fail field validation | Inspect the response message and field configuration |
+| `429` | Request rate limit was exceeded | Stop retries and try again later |
+
+<Tip>
+  For local development, add your exact dev-server origin, such as `http://localhost:5173`. `localhost` with another port is a different origin.
+</Tip>

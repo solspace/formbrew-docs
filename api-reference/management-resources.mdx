@@ -1,0 +1,94 @@
+---
+title: "Management API resources"
+description: "Catalog of Management API endpoints and their behavior."
+---
+
+# Management API resources
+
+This page summarizes the Management API operations. Use the generated endpoint pages for complete property schemas and response definitions.
+
+## Identity and health
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| `GET` | `/management/v1/health` | Returns Management API liveness. |
+| `GET` | `/management/v1/ready` | Checks database and Redis readiness; returns `503` when unavailable. |
+| `GET` | `/management/v1/openapi.json` | Downloads the current Management API OpenAPI document. |
+| `GET` | `/management/v1/me` | Returns the current user and workspace membership. |
+
+Health and readiness are service probes. The current identity response includes user ID, external identity ID, optional profile values, workspace ID and name, and the membership role.
+
+## Forms
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| `GET` | `/management/v1/forms` | Lists non-archived forms, newest first, with fields embedded. |
+| `POST` | `/management/v1/forms` | Creates a draft form and generated honeypot. |
+| `GET` | `/management/v1/forms/{formId}` | Gets one non-archived form and its fields. |
+| `PATCH` | `/management/v1/forms/{formId}` | Updates form metadata, status, labels, slug, or honeypot. |
+| `PUT` | `/management/v1/forms/{formId}/origins` | Replaces the complete allowed-origin list. |
+| `DELETE` | `/management/v1/forms/{formId}` | Soft-archives a form. |
+
+Creating a form requires `name`; slug, submit-button label, and success message are optional. Slugs are normalized and made unique within the workspace.
+
+Publishing requires at least one allowed origin and valid field definitions. Replacing origins with an empty array is allowed only while the form is not published. `{}` defaults to an empty origin list and therefore also clears origins on a draft.
+
+Archiving removes a form from normal list and retrieval operations. There is no restore endpoint.
+
+## Form fields
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| `POST` | `/management/v1/forms/{formId}/fields` | Creates a field and increments the form schema version. |
+| `PUT` | `/management/v1/forms/{formId}/fields/layout` | Updates field positions and widths and increments the schema version once. |
+| `PATCH` | `/management/v1/forms/{formId}/fields/{fieldId}` | Updates a field and validates the complete merged definition. |
+| `DELETE` | `/management/v1/forms/{formId}/fields/{fieldId}` | Permanently deletes a field and increments the schema version. |
+
+Create and patch bodies use field-type-specific `configJson` and `validationJson`. The layout body contains one or more unique field IDs with `rowIndex`, `columnIndex`, and `width`. It may update a subset of the form's fields.
+
+See [Fields](/dashboard-guide/fields) for type behavior and validation limits.
+
+## Form tokens
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| `GET` | `/management/v1/forms/{formId}/tokens` | Lists all public tokens, newest first, including revoked tokens. |
+| `POST` | `/management/v1/forms/{formId}/tokens` | Creates a public form token with optional name and expiration. |
+| `POST` | `/management/v1/forms/{formId}/tokens/{tokenId}/revoke` | Revokes a token; repeated revocation is idempotent. |
+
+Token responses include the complete publishable `tokenValue`, status, optional expiration, revocation timestamp, and last-use timestamp. Creating a token with an expiration in the past is accepted but produces an immediately unusable token.
+
+## Submissions
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| `GET` | `/management/v1/forms/{formId}/submissions` | Lists non-archived submissions, newest first. |
+| `GET` | `/management/v1/forms/{formId}/submissions/{submissionId}` | Gets one submission, including an archived submission. |
+| `PATCH` | `/management/v1/forms/{formId}/submissions/{submissionId}` | Updates status and/or internal notes. |
+
+Submitted values, metadata, request origin, user agent, and form schema version are immutable. Status accepts `NEW`, `REVIEWED`, `SPAM`, or `ARCHIVED`. Archiving hides the record from the list but does not prevent direct retrieval.
+
+## Usage
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| `GET` | `/management/v1/usage` | Returns accepted submissions for the current UTC calendar month. |
+
+The response includes an inclusive period start, exclusive period end, and submission count.
+
+## Webhooks
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| `GET` | `/management/v1/forms/{formId}/webhooks` | Lists non-deleted webhook endpoints. |
+| `POST` | `/management/v1/forms/{formId}/webhooks` | Creates an endpoint and returns its plaintext signing secret once. |
+| `PATCH` | `/management/v1/forms/{formId}/webhooks/{webhookId}` | Updates name, URL, and/or enabled state. |
+| `DELETE` | `/management/v1/forms/{formId}/webhooks/{webhookId}` | Soft-deletes and disables an endpoint. |
+| `POST` | `/management/v1/forms/{formId}/webhooks/{webhookId}/rotate-secret` | Replaces the signing secret and returns the new plaintext value once. |
+| `GET` | `/management/v1/forms/{formId}/webhook-deliveries` | Lists recent delivery records with an optional bounded `limit`. |
+
+Each form supports five non-deleted endpoints; disabled endpoints still count. Production URLs must use HTTPS on the default port, contain no credentials or fragment, and resolve to public addresses.
+
+Disabling, deleting, changing a URL, or rotating a secret cancels pending and failed deliveries for that endpoint. Completed and historical delivery records remain available.
+
+Webhook delivery statuses are `PENDING`, `PROCESSING`, `FAILED`, `SUCCEEDED`, `ABANDONED`, and `CANCELED`. The event type is currently `submission.created`.

@@ -1,20 +1,47 @@
 ---
-title: "Introduction"
-description: "Welcome to your project"
+title: "Formbrew documentation"
+description: "Build forms in the dashboard and connect them to any frontend."
 ---
 
-Write a short description of your product here. What it does, who it's for, and what they can accomplish with it.
+# Formbrew documentation
 
-<Tip>
-  Ready to make this your own? Start by editing this page. Update your `docs.json` file to customize your site. Then fill out the [Quickstart](/quickstart) page.
-</Tip>
+Formbrew lets you design forms in a dashboard, publish them to trusted websites, and collect submissions without building a form backend.
 
-<Card title="Quickstart" icon="rocket" href="/quickstart">
-  This card links to the quickstart page in your project.
-</Card>
-<Card title="Components" icon="puzzle-piece" href="https://mintlify.com/docs/components">
-  Add cards, callouts, steps, tabs, and more to design and structure your pages.
-</Card>
-<Card title="Settings" icon="gear" href="https://mintlify.com/docs/organize/settings">
-  Set your site name, branding, and navigation in the `docs.json` file.
-</Card>
+## Choose where to start
+
+<CardGroup cols={2}>
+  <Card title="Build a form" icon="rectangle-list" href="/dashboard-guide/getting-started">
+    Create a form, configure fields, publish it, and review incoming submissions.
+  </Card>
+  <Card title="Connect a frontend" icon="code" href="/integrations/quickstart">
+    Use the hosted embed, plain HTML, JavaScript SDK, React SDK, or direct HTTP.
+  </Card>
+  <Card title="Use the public API" icon="brackets-curly" href="/api-reference/public-overview">
+    Fetch public form definitions and submit values from websites or servers.
+  </Card>
+  <Card title="Explore the management API" icon="sliders" href="/api-reference/management-overview">
+    Review the internal API used to manage forms, fields, tokens, submissions, and webhooks.
+  </Card>
+</CardGroup>
+
+## The basic workflow
+
+1. Create a form and add fields in the dashboard.
+2. Add every website origin that will load or submit the form.
+3. Generate a public form token and publish the form.
+4. Connect the form using the integration method that fits your frontend.
+5. Review submissions in the dashboard or forward them with signed webhooks.
+
+<Note>
+  Public form tokens are publishable identifiers. They can appear in browser code. Access is also restricted by the form's publication status and allowed origins.
+</Note>
+
+## Integration options
+
+| Method | Best for | Rendering |
+| --- | --- | --- |
+| Hosted embed | Fastest no-build setup | Formbrew renders and manages the form |
+| Plain HTML | Sites that should work without JavaScript | You own the markup |
+| JavaScript SDK | Framework-neutral applications | Managed or fully custom |
+| React SDK | React 18.2 and React 19 applications | Managed component, hooks, or slots |
+| Public API | Custom clients and server-side workflows | Fully custom |

@@ -1,0 +1,53 @@
+---
+title: "Manage webhooks"
+description: "Create webhook destinations and monitor submission delivery attempts."
+---
+
+# Manage webhooks
+
+Webhooks send a signed `submission.created` event to your server after Formbrew accepts a submission. Open a form and select **Webhooks** to manage destinations and inspect recent deliveries.
+
+## Create an endpoint
+
+Select **Add endpoint** and provide:
+
+| Setting | Requirement |
+| --- | --- |
+| Endpoint name | 1 to 100 characters, for example `CRM intake` |
+| Destination URL | An HTTPS URL of at most 2,048 characters |
+
+Production destinations must use HTTPS on port 443, resolve to public network addresses, avoid redirects, and respond within 10 seconds. Each form supports up to five endpoints, including disabled endpoints.
+
+## Store the signing secret
+
+Formbrew displays the complete `whsec_...` secret once after endpoint creation or secret rotation. Copy it to your server-side secret manager before closing the dialog.
+
+<Warning>
+  The complete webhook secret cannot be viewed again. Do not put it in frontend code. Rotate it if it may have been exposed.
+</Warning>
+
+## Enable, edit, and delete
+
+- Disabling an endpoint stops new deliveries and cancels queued retries.
+- Changing the destination URL cancels queued retries.
+- Rotating the secret invalidates the old secret and cancels queued retries.
+- Deleting an endpoint disables it, cancels queued retries, and frees endpoint capacity.
+
+A delivery already in progress may still finish after a configuration change.
+
+## Transmission log
+
+The **Recent deliveries** table shows the latest 20 records across the form. Select **Refresh** to reload it.
+
+| Status | Meaning |
+| --- | --- |
+| Pending | Waiting for its first attempt |
+| Delivering | A worker is sending the request |
+| Retry scheduled | The last attempt failed and another is scheduled |
+| Succeeded | The destination returned a successful response |
+| Abandoned | All attempts were used |
+| Canceled | Endpoint configuration canceled the delivery |
+
+Formbrew attempts delivery immediately, then after approximately 1 minute, 5 minutes, 30 minutes, and 2 hours, for at most five attempts. The dashboard does not currently support manual retries or test events.
+
+Continue with [Receive webhooks](/webhooks/overview) to implement your endpoint and [Verify webhook signatures](/webhooks/verify-signatures) before trusting payloads.

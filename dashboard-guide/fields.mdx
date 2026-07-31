@@ -1,0 +1,117 @@
+---
+title: "Fields"
+description: "Reference for every Formbrew field type, setting, and validation rule."
+---
+
+# Fields
+
+Every field has a label, submission key, type, width, required state, and optional help text. Input fields can also have placeholders and type-specific validation.
+
+## Common settings
+
+| Setting | Behavior |
+| --- | --- |
+| Label | Visible field name. Labels are required and trimmed when saved. |
+| Key | Property name in submissions. Keys use lowercase letters, numbers, and underscores. |
+| Type | Control and validation behavior. A field can be changed to another type. |
+| Width | Full, Half, Third, or Two thirds. Widths collapse on small screens. |
+| Required | Requires a value, a checked checkbox, or at least one group selection. |
+| Placeholder | Hint inside Text, Email, Number, Phone, and Website inputs. |
+| Help text | Supporting text displayed below the control. |
+
+## Text
+
+A single-line text input for names, subjects, short answers, and other unrestricted text.
+
+| Option | Rule |
+| --- | --- |
+| Minimum length | Integer from 0 to 10,000 |
+| Maximum length | Integer from 0 to 10,000 and not lower than the minimum |
+| Required | Rejects missing, empty, or whitespace-only values |
+
+Non-empty text is stored exactly as submitted and is not trimmed.
+
+## Email
+
+An email input with browser and backend email validation.
+
+| Option | Rule |
+| --- | --- |
+| Minimum length | Integer from 0 to 10,000 |
+| Maximum length | Integer from 0 to 10,000 and not lower than the minimum |
+| Required | Requires a valid email address |
+
+Email values are trimmed before validation and storage.
+
+## Number
+
+A numeric input for quantities, scores, prices, and other finite numbers.
+
+| Option | Rule |
+| --- | --- |
+| Minimum value | Lowest accepted number, including decimals |
+| Maximum value | Highest accepted number, including decimals |
+| Only allow whole numbers | Rejects decimal values and sets the browser step to `1` |
+
+The minimum cannot exceed the maximum. Numeric strings are accepted by the API when they represent finite numbers.
+
+## Phone
+
+A telephone input that accepts free-form phone text.
+
+| Option | Rule |
+| --- | --- |
+| Minimum length | Integer from 0 to 64 |
+| Maximum length | Integer from 0 to 64 and not lower than the minimum |
+
+Phone values are trimmed. Formbrew does not validate countries, prefixes, or telephone-number formats.
+
+## Website
+
+A URL input for absolute website addresses.
+
+| Option | Rule |
+| --- | --- |
+| Minimum length | Integer from 0 to 10,000 |
+| Maximum length | Integer from 0 to 10,000 and not lower than the minimum |
+| Require HTTPS | Accepts only URLs beginning with `https://` |
+
+Website values are trimmed and must use HTTP or HTTPS. Relative URLs and other protocols are rejected.
+
+## Checkbox
+
+A single boolean checkbox for consent, acknowledgement, or yes/no choices. When required, it must be checked. An omitted optional checkbox is stored as `false`.
+
+The API accepts booleans and common HTML checkbox strings such as `on`, `true`, `yes`, and `1`.
+
+## Checkbox group
+
+A set of options where visitors can select more than one value.
+
+| Option | Rule |
+| --- | --- |
+| Minimum selections | Nonnegative integer no greater than the option count |
+| Maximum selections | Nonnegative integer no greater than the option count |
+| Required | Makes the effective minimum at least one |
+
+Duplicate selections and values that are not active options are rejected. An omitted optional checkbox group is stored as an empty array.
+
+## Radio group
+
+A set of options where visitors can select exactly one value. A required radio group must have a selection. The submitted value must match an active option.
+
+Radio groups do not support custom minimum or maximum selection rules.
+
+## Choice options
+
+Checkbox and radio groups always contain at least one option. Select **Add option** to append an option and **Remove** to delete one; the final option cannot be removed.
+
+Formbrew creates a stable submitted value when an option is added. Renaming the visible option label does not change that submitted value. Removed values are reserved and are not reused later.
+
+<Note>
+  Stable option values protect existing integrations when display labels change. The current dashboard does not display or let you edit those generated values.
+</Note>
+
+## Unsupported fields
+
+The current builder does not include textarea, select, date, time, address, file upload, hidden, content, payment, multi-step, or conditional fields. File uploads sent to the public API are rejected.

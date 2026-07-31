@@ -1,0 +1,48 @@
+---
+title: "Frontend integrations"
+description: "Choose the best way to add a Formbrew form to your website or application."
+---
+
+# Frontend integrations
+
+Every integration uses the same published form definition, validation rules, public token, origin checks, and submission API. Choose an integration based on how much rendering and state you want Formbrew to manage.
+
+<CardGroup cols={2}>
+  <Card title="Hosted embed" icon="bolt" href="/integrations/embed">
+    Add a managed form with one script tag and no build step.
+  </Card>
+  <Card title="Plain HTML" icon="code" href="/integrations/html">
+    Own the markup and work without client-side JavaScript.
+  </Card>
+  <Card title="JavaScript SDK" icon="js" href="/integrations/javascript">
+    Use a typed client, a managed DOM renderer, or both.
+  </Card>
+  <Card title="React SDK" icon="react" href="/integrations/react">
+    Use a managed component, headless hooks, or component slots.
+  </Card>
+</CardGroup>
+
+## Compare methods
+
+| Capability | Embed | HTML | JavaScript | React | Raw API |
+| --- | --- | --- | --- | --- | --- |
+| Build step | No | No | Yes | Yes | Optional |
+| Formbrew renders fields | Yes | No | Optional | Optional | No |
+| Loads current definition | Yes | Optional | Yes | Yes | You decide |
+| Managed browser validation | Yes | Basic HTML only | Yes with DOM renderer | Yes with managed form | No |
+| Managed success and error UI | Yes | No | Yes with DOM renderer | Yes with managed form | No |
+| Full markup control | CSS-level | Yes | Yes with headless client | Yes with hooks or slots | Yes |
+
+## Recommendations
+
+- Choose **Hosted embed** when speed and low maintenance matter most.
+- Choose **Plain HTML** for progressive enhancement or sites without a JavaScript build.
+- Choose **JavaScript SDK** for Vue, Svelte, Astro, vanilla JavaScript, and framework-neutral applications.
+- Choose **React SDK** for React 18.2 or React 19 applications.
+- Choose **Raw API** when you already have a form renderer or need a server-side workflow.
+
+There are no dedicated Vue, Svelte, Angular, Astro, or mobile packages yet. Those clients can use the hosted embed, DOM renderer, headless JavaScript client, or public HTTP API.
+
+<Note>
+  None of these methods bypass backend validation. The public API is authoritative even when the browser performs immediate validation.
+</Note>

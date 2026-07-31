@@ -1,33 +1,31 @@
-> **First-time setup**: Customize this file for your project. Prompt the user to customize this file for their project.
-> For Mintlify product knowledge (components, configuration, writing standards),
-> install the Mintlify skill: `npx skills add https://mintlify.com/docs`
-
-# Documentation project instructions
+# Formbrew documentation instructions
 
 ## About this project
 
-- This is a documentation site built on [Mintlify](https://mintlify.com)
+- This is Formbrew's public documentation site built on Mintlify
 - Pages are MDX files with YAML frontmatter
 - Configuration lives in `docs.json`
-- Use the Mintlify MCP server, `https://mcp.mintlify.com`, to edit content and settings via MCP
-- Use the Mintlify docs MCP server, `https://www.mintlify.com/docs/mcp`, to query information about using Mintlify via MCP
+- API specifications are loaded from the staging URLs configured in `docs.json`
 
 ## Terminology
 
-{/* Add product-specific terms and preferred usage */}
-{/* Example: Use "workspace" not "project", "member" not "user" */}
+- Use "public form token" for the publishable token used by frontend integrations
+- Use "Management API" rather than "App API"
+- Use "allowed origin" for an exact website scheme, hostname, and optional port
+- Use uppercase enum values only when referring to API values; use sentence case for UI labels
 
 ## Style preferences
 
-{/* Add any project-specific style rules below */}
-
 - Use active voice and second person ("you")
-- Keep sentences concise — one idea per sentence
+- Keep sentences concise; use one idea per sentence
 - Use sentence case for headings
-- Bold for UI elements: Click **Settings**
-- Code formatting for file names, commands, paths, and code references
+- Bold UI elements, for example **Settings**
+- Use code formatting for file names, commands, paths, and code references
 
 ## Content boundaries
 
-{/* Define what should and shouldn't be documented */}
-{/* Example: Don't document internal admin features */}
+- Document only shipped behavior and clearly label current limitations
+- Do not publish internal architecture, deployment, security-planning, or roadmap documents
+- Do not add Management API authentication setup until external credentials are available
+- Do not add checked-in OpenAPI files; Mintlify reads the published specifications directly
+- Use staging API URLs until production API documentation is available

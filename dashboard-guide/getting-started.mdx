@@ -1,0 +1,47 @@
+---
+title: "Dashboard quickstart"
+description: "Create, publish, connect, and test your first Formbrew form."
+---
+
+# Dashboard quickstart
+
+This guide takes a form from an empty draft to a working frontend integration.
+
+<Steps>
+  <Step title="Create a form">
+    Open **Forms** and select **New form**. Formbrew creates an **Untitled form** draft and opens the form builder. Update the name and other form settings, then select **Save**.
+  </Step>
+  <Step title="Add fields">
+    Select field types from the left side of the builder. Configure each field's label, key, width, required state, and validation in the field properties panel.
+  </Step>
+  <Step title="Allow your website">
+    Open **Public access**, add the exact origin of your website, and select **Save origins**. Include the scheme and port when applicable, for example `https://www.example.com` or `http://localhost:5173`.
+  </Step>
+  <Step title="Generate a token">
+    In **Public access**, select **Add new access token**. Give the token a recognizable name and select **Generate token**.
+  </Step>
+  <Step title="Publish the form">
+    Return to **Layout**, open the form settings, change **Status** to **Published**, and select **Save**. A form cannot be published until it has at least one allowed origin.
+  </Step>
+  <Step title="Connect and test">
+    Select **View integration guide**, choose Embed, HTML, JavaScript, or React, and copy the generated example. Submit a test entry from an allowed website and verify that it appears under **Submissions**.
+  </Step>
+</Steps>
+
+<Warning>
+  Changes to a published form affect its public definition immediately after they are saved. There is no separate republish step.
+</Warning>
+
+## Form defaults
+
+New forms start with these values:
+
+| Setting | Default |
+| --- | --- |
+| Name | `Untitled form` |
+| Status | Draft |
+| Submit button | `Submit` |
+| Success message | `Thanks for your submission.` |
+| Honeypot | A generated name such as `_fb_a8f31c_url` |
+
+Continue with [Manage forms](/dashboard-guide/forms) for form lifecycle details or [Fields](/dashboard-guide/fields) for every supported field type.

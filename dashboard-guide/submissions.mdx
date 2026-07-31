@@ -1,0 +1,42 @@
+---
+title: "Submissions"
+description: "Review submitted values, update workflow status, and add internal notes."
+---
+
+# Submissions
+
+Open a form and select **Submissions** to view its inbox. Newest submissions appear first. Each row shows its status, ID, creation time, and a preview of submitted values.
+
+## Submission statuses
+
+| Status | Suggested use |
+| --- | --- |
+| New | Not reviewed yet. This is the default for accepted submissions. |
+| Reviewed | Handled or acknowledged by your team. |
+| Spam | Accepted by the API but later classified as unwanted. |
+| Archived | Removed from the normal inbox. |
+
+Automatic honeypot detections are rejected before storage and do not appear with the Spam status.
+
+## Review a submission
+
+Select a submission to open its details. The page shows:
+
+- Values matched to the field labels and keys from the submitted schema version.
+- Created and updated timestamps.
+- Submission ID and request origin.
+- Editable status and internal notes.
+
+Select **Save details** after changing the status or notes. Submitted values are read-only.
+
+## Schema changes
+
+Each field create, update, delete, or reorder changes the form schema version. If a submission used an older version than the current form, the detail page displays raw stored keys rather than potentially incorrect current labels.
+
+<Tip>
+  Use durable, descriptive field keys from the beginning. Keys remain the most reliable way to interpret historical submissions and webhook payloads after labels change.
+</Tip>
+
+## Current limitations
+
+The dashboard does not currently provide inbox search, filtering, pagination, bulk actions, export, deletion, or an archived-submission view. Archiving removes a submission from the normal list.

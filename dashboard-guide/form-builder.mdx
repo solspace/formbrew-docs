@@ -1,0 +1,63 @@
+---
+title: "Use the form builder"
+description: "Add, edit, resize, and reorder fields in the visual form builder."
+---
+
+# Use the form builder
+
+The layout editor has three working areas:
+
+| Area | Purpose |
+| --- | --- |
+| Field palette | Add a Text, Email, Number, Phone, Website, Checkbox, Checkbox group, or Radio group field. |
+| Preview | Review the layout, select fields, and drag fields into a new order. |
+| Properties | Edit the selected field, or edit form settings when no field is selected. |
+
+On smaller screens these areas stack vertically and all field widths render as full width.
+
+## Add and select fields
+
+Select a field in the palette to append it to the form. New fields use the label **Untitled field**, are optional, and span the full form width. The new field is selected automatically so you can configure it in the properties panel.
+
+Select a field in the preview to edit it. Select blank preview space to return to form settings.
+
+## Field keys
+
+The field key is the property name stored in each submission and sent to integrations. For example, a field with key `email_address` produces:
+
+```json
+{
+  "email_address": "hello@example.com"
+}
+```
+
+Formbrew derives the initial key from the label, lowercases it, and uses underscores between words. Duplicate keys receive a suffix such as `_2`.
+
+While the key still matches the generated value, changing the label updates the key too. After you customize the key, later label changes preserve it.
+
+<Warning>
+  Changing a key changes the submission contract. Update custom frontend code and downstream webhook consumers before changing keys on a published form.
+</Warning>
+
+## Widths
+
+Fields support four responsive widths:
+
+| Width | Desktop span |
+| --- | --- |
+| Full | Entire row |
+| Half | One half |
+| Third | One third |
+| Two thirds | Two thirds |
+
+Managed JavaScript, React, and embed forms switch these layouts to full width on narrow screens.
+
+## Reorder and delete
+
+Drag fields in the preview to change their order. Layout changes save immediately. Field width is preserved when a field moves.
+
+Select **Delete field** in the properties panel to remove a field. Deletion is immediate and has no confirmation dialog.
+
+## Preview limitations
+
+The builder preview is for layout editing, not test submissions. Controls are read-only, the preview button does not submit, and backend validation does not run. Test the final behavior through a real integration on an allowed origin.

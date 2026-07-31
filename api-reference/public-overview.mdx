@@ -1,0 +1,93 @@
+---
+title: "Public API overview"
+description: "Fetch published form definitions and submit form values."
+---
+
+# Public API overview
+
+The Public API is the browser-safe surface used by the hosted embed, JavaScript SDK, React SDK, plain HTML forms, and custom clients.
+
+```text
+https://api.staging.formbrew.com/v1
+```
+
+## Endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/v1/health` | Check public API liveness. |
+| `GET` | `/v1/openapi.json` | Download the current Public API OpenAPI document. |
+| `GET` | `/v1/forms/{token}` | Fetch the current render-safe definition of a published form. |
+| `POST` | `/v1/forms/{token}/submit` | Validate and create a submission. |
+
+The endpoint reference in this section is generated from the [published staging OpenAPI document](https://api.staging.formbrew.com/v1/openapi.json) and contains the declared application request and response schemas. Transport-level framework errors are described separately under [Public API requests](/api-reference/public-requests#error-envelope).
+
+## Access model
+
+Form endpoints require:
+
+- A valid, active public form token in the URL.
+- A form with `PUBLISHED` status.
+- A request `Origin`, or fallback `Referer`, matching an allowed origin.
+- A request within the form's public rate limits.
+
+Public tokens are publishable identifiers and can be included in frontend code. They are not management credentials.
+
+## Fetch a definition
+
+```bash
+curl 'https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN' \
+  --header 'Origin: https://www.example.com'
+```
+
+The successful `data` object contains form display settings, `schemaVersion`, `honeypotFieldName`, and ordered field definitions. It intentionally excludes workspace details, allowed origins, token records, submission data, and internal timestamps.
+
+```json
+{
+  "data": {
+    "id": "frm_123",
+    "name": "Contact",
+    "slug": "contact",
+    "schemaVersion": 3,
+    "submitButtonLabel": "Send",
+    "successMessage": "Thanks. We will be in touch.",
+    "honeypotFieldName": "_fb_a8f31c_url",
+    "fields": []
+  }
+}
+```
+
+## Create a submission
+
+```bash
+curl 'https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN/submit' \
+  --header 'Content-Type: application/json' \
+  --header 'Origin: https://www.example.com' \
+  --data '{
+    "values": {
+      "email": "hello@example.com"
+    },
+    "metadata": {
+      "source": "contact-page"
+    }
+  }'
+```
+
+An accepted request returns `201`:
+
+```json
+{
+  "data": {
+    "id": "sub_123",
+    "message": "Thanks. We will be in touch."
+  }
+}
+```
+
+## Side effects
+
+An accepted submission is stored, counted in workspace usage, and scheduled for every enabled webhook endpoint on the form. Webhook queue notification failures do not change an already accepted submission; workers recover pending records from the database.
+
+<Note>
+  The Public API does not support idempotency keys. Repeating an accepted request creates another submission.
+</Note>

@@ -1,0 +1,126 @@
+---
+title: "Hosted embed"
+description: "Render and submit a managed Formbrew form with one script tag."
+---
+
+# Hosted embed
+
+The hosted embed is a version-pinned browser script that renders a managed form into your page. It uses light DOM rather than an iframe, so your site can theme the generated form.
+
+## Auto-mount a form
+
+Place the script in the document body where the form should appear:
+
+```html
+<script
+  crossorigin="anonymous"
+  defer
+  integrity="sha384-iTXCBbm6ZFJtVjznaAtvkZ1QX0PY7m+ZZL4nECY+PN0Tpo3siEhbwW5BJe+WWot9"
+  src="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.1.0-beta.1/dist/embed.js"
+  data-formbrew-token="YOUR_PUBLIC_TOKEN"
+  data-formbrew-base-url="https://api.staging.formbrew.com/v1"
+></script>
+```
+
+The script inserts the form beside itself and loads a version-matched stylesheet. Keep the exact package version and integrity hash together; do not replace the version with `latest` or `beta`.
+
+## Render into another element
+
+```html
+<div id="contact-form"></div>
+
+<script
+  crossorigin="anonymous"
+  defer
+  integrity="sha384-iTXCBbm6ZFJtVjznaAtvkZ1QX0PY7m+ZZL4nECY+PN0Tpo3siEhbwW5BJe+WWot9"
+  src="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.1.0-beta.1/dist/embed.js"
+  data-formbrew-token="YOUR_PUBLIC_TOKEN"
+  data-formbrew-target="#contact-form"
+></script>
+```
+
+## Script attributes
+
+| Attribute | Purpose |
+| --- | --- |
+| `data-formbrew-token` | Public token used for declarative auto-mounting. |
+| `data-formbrew-base-url` | Overrides the production API base URL. |
+| `data-formbrew-target` | CSS selector for an existing mount element. |
+| `data-formbrew-auto-mount="false"` | Loads the global API without creating a form automatically. |
+| `data-formbrew-styles="false"` | Prevents automatic stylesheet loading. |
+| `data-formbrew-styles-url` | Loads styles from a custom URL. |
+
+## Listen for events
+
+Auto-mounted forms emit bubbling lifecycle events:
+
+```js
+document.addEventListener("formbrew:ready", (event) => {
+  console.log("Loaded", event.detail.definition.name);
+});
+
+document.addEventListener("formbrew:success", (event) => {
+  console.log("Submission", event.detail.result.id);
+});
+
+document.addEventListener("formbrew:error", (event) => {
+  console.error(event.detail.phase, event.detail.error);
+});
+```
+
+The error `phase` is either `load` or `submit`.
+
+## Imperative rendering
+
+Disable auto-mounting when your application controls when the form appears:
+
+```html
+<div id="contact-form"></div>
+<script
+  crossorigin="anonymous"
+  integrity="sha384-iTXCBbm6ZFJtVjznaAtvkZ1QX0PY7m+ZZL4nECY+PN0Tpo3siEhbwW5BJe+WWot9"
+  src="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.1.0-beta.1/dist/embed.js"
+  data-formbrew-auto-mount="false"
+></script>
+<script>
+  Formbrew.render("#contact-form", {
+    baseUrl: "https://api.staging.formbrew.com/v1",
+    token: "YOUR_PUBLIC_TOKEN",
+    metadata: { source: window.location.pathname },
+    onSuccess(result) {
+      console.log(result.message);
+    },
+  }).then((controller) => {
+    // Store the controller if this view later needs reset() or destroy().
+    window.contactForm = controller;
+  });
+</script>
+```
+
+## Theme the form
+
+Override Formbrew CSS variables on the form's container:
+
+```css
+#contact-form .fb-form {
+  --fb-accent: #176247;
+  --fb-accent-strong: #0f4d38;
+  --fb-border: #c9d8d1;
+  --fb-danger: #b42318;
+  --fb-focus: #78c6a8;
+  --fb-muted: #5f6f67;
+  --fb-radius: 0.5rem;
+  --fb-surface: #ffffff;
+  --fb-text: #17201c;
+}
+```
+
+## Content Security Policy
+
+A strict CSP must allow:
+
+- The exact jsDelivr URL under `script-src`.
+- The package stylesheet or your override under `style-src`.
+- `https://api.staging.formbrew.com` under `connect-src`.
+
+The loader copies its script nonce to the generated stylesheet link.

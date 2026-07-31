@@ -1,0 +1,109 @@
+---
+title: "Public API requests"
+description: "Request formats, origin headers, validation, errors, and rate limits for the Public API."
+---
+
+# Public API requests
+
+## Request origin
+
+Both form endpoints require an allowed website origin.
+
+1. If `Origin` is present, it is authoritative.
+2. If `Origin` is absent, Formbrew uses the origin portion of `Referer`.
+3. The normalized value must exactly match the form's allowed-origin list.
+
+`Origin: null`, malformed origins, and non-HTTP(S) origins are rejected. Non-browser callers should send `Origin` explicitly.
+
+## Submission content types
+
+### JSON
+
+Use the canonical envelope:
+
+```json
+{
+  "values": {
+    "email": "hello@example.com",
+    "interests": ["product", "pricing"]
+  },
+  "metadata": {
+    "source": "pricing-page"
+  }
+}
+```
+
+`values` is required. `metadata` is optional. Unknown top-level properties and direct values objects are rejected.
+
+### URL-encoded
+
+```bash
+curl 'https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN/submit' \
+  --header 'Content-Type: application/x-www-form-urlencoded' \
+  --header 'Origin: https://www.example.com' \
+  --data-urlencode 'email=hello@example.com' \
+  --data-urlencode 'interests=product' \
+  --data-urlencode 'interests=pricing' \
+  --data-urlencode '_source=pricing-page'
+```
+
+Repeated names become arrays. Names beginning with `_` become metadata keys with one leading underscore removed.
+
+### Multipart
+
+`multipart/form-data` follows the same flat-field rules as URL-encoded input. Text fields are accepted; file parts are rejected.
+
+## Validation
+
+The API applies the current published form definition:
+
+- Unknown keys are rejected.
+- Required values are enforced.
+- Length, email, number, integer, range, URL, and HTTPS rules are enforced.
+- Choice values must be active options.
+- Duplicate checkbox-group selections are rejected.
+- Checkbox-group minimum and maximum counts are enforced.
+- A non-empty honeypot is rejected with a generic message.
+
+See [Fields](/dashboard-guide/fields) for each field's value and validation behavior.
+
+## Error envelope
+
+```json
+{
+  "error": "ValidationError",
+  "message": "Email must be a valid email address.",
+  "details": []
+}
+```
+
+`details` is optional and is most commonly present for request-schema failures.
+
+| Status | Typical meaning |
+| --- | --- |
+| `400` | Invalid body, form value, metadata, honeypot, or unsupported file input |
+| `401` | Token is revoked or expired |
+| `403` | Origin is missing, malformed, or not allowed |
+| `404` | Token is unknown or form is not published |
+| `415` | Unsupported request content type |
+| `429` | Public request limit exceeded |
+| `500` | Unexpected error or invalid persisted form configuration |
+| `503` | Public rate limiter is unavailable |
+
+Framework-level errors such as malformed JSON or unsupported content types may include Fastify's default error properties in addition to, or instead of, the normal contract envelope.
+
+## Rate limits
+
+| Operation | Scope | Limit |
+| --- | --- | --- |
+| Fetch definition | Form and client IP | 120 per minute |
+| Fetch definition | Form | 10,000 per hour |
+| Submit | Form and client IP | 10 per minute |
+| Submit | Form and client IP | 100 per hour |
+| Submit | Form | 1,000 per hour |
+
+The API does not currently return `Retry-After`, remaining, or reset headers.
+
+## CORS
+
+The public surface supports `GET`, `POST`, and preflight `OPTIONS`, allows the `Content-Type` request header, and does not use cookies or credentialed CORS. CORS approval is separate from the form-specific origin check.

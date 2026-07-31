@@ -1,0 +1,96 @@
+---
+title: "Plain HTML"
+description: "Submit a Formbrew form with native HTML, with optional progressive enhancement."
+---
+
+# Plain HTML
+
+A native HTML form can submit directly to Formbrew without client-side JavaScript. Use the generated example in the dashboard because it includes your current field names and choice values.
+
+## Native form
+
+```html
+<form action="https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN/submit" method="POST">
+  <div aria-hidden="true" style="position:absolute;left:-10000px;">
+    <label>
+      Website
+      <input name="YOUR_HONEYPOT_FIELD" tabindex="-1" autocomplete="off" />
+    </label>
+  </div>
+
+  <label for="email">Email</label>
+  <input id="email" name="email" type="email" required />
+
+  <fieldset>
+    <legend>Interests</legend>
+    <label><input name="interests" type="checkbox" value="product" /> Product</label>
+    <label><input name="interests" type="checkbox" value="pricing" /> Pricing</label>
+  </fieldset>
+
+  <button type="submit">Submit</button>
+</form>
+```
+
+The browser sends `application/x-www-form-urlencoded` by default. Repeated names, such as checkbox-group values, are normalized into arrays.
+
+<Warning>
+  A successful native submission navigates to the API's JSON response. There is no success redirect or hosted success page yet. Use progressive enhancement if the visitor should remain on your page.
+</Warning>
+
+## Honeypot
+
+Use the `honeypotFieldName` from the form settings or public definition. The input must:
+
+- Be a normal text input, not `type="hidden"`.
+- Be visually hidden from human visitors.
+- Keep the generated field name.
+- Be left empty.
+
+A bot-filled honeypot returns `400` with the generic message `Submission rejected.`
+
+## Progressive enhancement
+
+Intercept the native submit, send `FormData`, and handle the JSON response in place:
+
+```html
+<p id="form-status" role="status"></p>
+
+<script>
+  const form = document.querySelector("form");
+  const status = document.querySelector("#form-status");
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    status.textContent = "Submitting...";
+
+    try {
+      const response = await fetch(form.action, {
+        body: new FormData(form),
+        method: "POST",
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.message ?? "Submission failed.");
+      }
+
+      form.reset();
+      status.textContent = payload.data.message;
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : "Submission failed.";
+    }
+  });
+</script>
+```
+
+`FormData` uses `multipart/form-data`. Formbrew accepts text entries but rejects file uploads.
+
+## Metadata in flat forms
+
+Names beginning with `_` become metadata keys after the first underscore is removed:
+
+```html
+<input name="_source" type="hidden" value="contact-page" />
+```
+
+This produces metadata `{ "source": "contact-page" }`. Keep normal field keys free of a leading underscore.

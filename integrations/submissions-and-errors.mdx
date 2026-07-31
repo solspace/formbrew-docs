@@ -1,0 +1,92 @@
+---
+title: "Submissions and errors"
+description: "Understand value shapes, metadata, successful responses, validation, and request limits."
+---
+
+# Submissions and errors
+
+## JSON submission shape
+
+Raw JSON requests use a required `values` envelope and optional `metadata`:
+
+```json
+{
+  "values": {
+    "email": "hello@example.com",
+    "interests": ["product", "pricing"],
+    "terms": true
+  },
+  "metadata": {
+    "campaign": "launch",
+    "source": "contact-page"
+  }
+}
+```
+
+A direct values object such as `{ "email": "hello@example.com" }` is not valid JSON input for the public API. The JavaScript clients create the envelope automatically.
+
+## Successful response
+
+An accepted submission returns `201`:
+
+```json
+{
+  "data": {
+    "id": "sub_123",
+    "message": "Thanks for your submission."
+  }
+}
+```
+
+The message is configured in the form settings. Managed clients reset the form and display this message by default.
+
+## Error response
+
+Contract errors use this shape:
+
+```json
+{
+  "error": "ValidationError",
+  "message": "Email must be a valid email address.",
+  "details": []
+}
+```
+
+`details` is optional. Always use `response.ok` or the HTTP status before treating a parsed payload as success.
+
+## Field normalization
+
+- Unknown field keys are rejected.
+- Required values cannot be omitted.
+- Optional checkboxes default to `false`.
+- Optional checkbox groups default to `[]`.
+- Other empty optional values are omitted.
+- Email, phone, and website values are trimmed.
+- Text values preserve their submitted content.
+- Choice values must match currently active options.
+- File uploads are not supported.
+
+## Metadata
+
+Metadata stores integration context separately from form answers. Useful values include page path, campaign, locale, and application version.
+
+Do not place secrets, authentication credentials, payment data, or other values you would not want stored with a submission in metadata.
+
+## Duplicate submissions
+
+The API does not currently support idempotency keys or server-side deduplication. Repeating a successful request creates another submission. Managed clients prevent a second submission while one request is in flight, but your custom UI should also disable duplicate submit actions.
+
+## Request limits
+
+Public definition requests:
+
+- 120 per minute per form and client IP.
+- 10,000 per hour per form.
+
+Public submissions:
+
+- 10 per minute per form and client IP.
+- 100 per hour per form and client IP.
+- 1,000 per hour per form.
+
+A limit violation returns `429`. Responses do not currently include rate-limit or `Retry-After` headers, so avoid automatic tight retry loops.

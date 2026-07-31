@@ -1,72 +1,113 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mintlify Starter Kit",
+  "name": "Formbrew",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#176247",
+    "light": "#176247",
+    "dark": "#78c6a8"
   },
-  "favicon": "/favicon.svg",
   "navigation": {
-    "pages": [
+    "tabs": [
       {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
+        "tab": "Dashboard",
+        "icon": "browser",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": ["index", "dashboard-guide/getting-started"]
+          },
+          {
+            "group": "Build forms",
+            "pages": [
+              "dashboard-guide/forms",
+              "dashboard-guide/form-builder",
+              "dashboard-guide/fields"
+            ]
+          },
+          {
+            "group": "Run forms",
+            "pages": [
+              "dashboard-guide/public-access",
+              "dashboard-guide/submissions",
+              "dashboard-guide/webhooks",
+              "dashboard-guide/usage"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Frontend",
+        "icon": "code",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": ["integrations/overview", "integrations/quickstart"]
+          },
+          {
+            "group": "Integration methods",
+            "pages": [
+              "integrations/embed",
+              "integrations/html",
+              "integrations/javascript",
+              "integrations/react",
+              "integrations/custom-rendering"
+            ]
+          },
+          {
+            "group": "Concepts",
+            "pages": ["integrations/public-access", "integrations/submissions-and-errors"]
+          },
+          {
+            "group": "Server integrations",
+            "pages": ["webhooks/overview", "webhooks/verify-signatures"]
+          }
+        ]
+      },
+      {
+        "tab": "Public API",
+        "icon": "brackets-curly",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["api-reference/public-overview", "api-reference/public-requests"]
+          },
+          {
+            "group": "Endpoints",
+            "openapi": {
+              "source": "https://api.staging.formbrew.com/v1/openapi.json",
+              "directory": "api-reference/public"
+            }
+          }
+        ]
+      },
+      {
+        "tab": "Management API",
+        "icon": "sliders",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["api-reference/management-overview", "api-reference/management-resources"]
+          },
+          {
+            "group": "Endpoints",
+            "openapi": {
+              "source": "https://api.staging.formbrew.com/management/v1/openapi.json",
+              "directory": "api-reference/management"
+            }
+          }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
     ]
   },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+  "contextual": {
+    "options": ["copy", "download-spec"]
+  },
+  "navbar": {
+    "primary": {
+      "type": "button",
+      "label": "Open dashboard",
+      "href": "https://formbrew.com"
     }
   }
 }

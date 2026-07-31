@@ -1,0 +1,173 @@
+---
+title: "React SDK"
+description: "Render Formbrew forms with a managed React component, hooks, and slots."
+---
+
+# React SDK
+
+`@formbrew/react` supports React 18.2 and React 19. It provides a managed form, headless hooks, accessible default fields, and typed slots.
+
+## Install
+
+<CodeGroup>
+```bash npm
+npm install @formbrew/react
+```
+
+```bash pnpm
+pnpm add @formbrew/react
+```
+
+```bash yarn
+yarn add @formbrew/react
+```
+
+```bash bun
+bun add @formbrew/react
+```
+</CodeGroup>
+
+## Managed form
+
+```tsx
+import { FormbrewForm } from "@formbrew/react";
+import "@formbrew/react/styles.css";
+
+export function ContactForm() {
+  return (
+    <FormbrewForm
+      baseUrl="https://api.staging.formbrew.com/v1"
+      token="YOUR_PUBLIC_TOKEN"
+      metadata={() => ({ source: window.location.pathname })}
+      onSuccess={(result) => console.log(result.id, result.message)}
+      onSubmitError={(error) => console.error(error.code, error.message)}
+    />
+  );
+}
+```
+
+The component loads and renders the current definition, includes the honeypot, performs browser and checkbox-group validation, prevents duplicate pending submissions, and resets after success.
+
+Set `resetOnSuccess={false}` to preserve values after an accepted submission.
+
+## Use an existing client
+
+Pass either a `token` and client options or a configured `client`, never both:
+
+```tsx
+import { createFormbrewClient } from "@formbrew/js";
+import { FormbrewForm } from "@formbrew/react";
+
+const client = createFormbrewClient({
+  baseUrl: "https://api.staging.formbrew.com/v1",
+  token: "YOUR_PUBLIC_TOKEN",
+});
+
+export function ContactForm() {
+  return <FormbrewForm client={client} />;
+}
+```
+
+## Headless hooks
+
+```tsx
+import {
+  useFormbrewClient,
+  useFormbrewDefinition,
+  useFormbrewSubmit,
+} from "@formbrew/react/hooks";
+
+export function HeadlessForm() {
+  const client = useFormbrewClient({
+    baseUrl: "https://api.staging.formbrew.com/v1",
+    token: "YOUR_PUBLIC_TOKEN",
+  });
+  const definition = useFormbrewDefinition({ client });
+  const submission = useFormbrewSubmit({
+    client,
+    metadata: { source: "custom-react-form" },
+  });
+
+  if (definition.status === "idle" || definition.status === "loading") {
+    return <p>Loading...</p>;
+  }
+
+  if (definition.status === "error") {
+    return <button onClick={() => void definition.reload()}>Retry</button>;
+  }
+
+  return (
+    <button
+      disabled={submission.status === "submitting"}
+      onClick={() => void submission.submit({ email: "hello@example.com" })}
+    >
+      {definition.definition.submitButtonLabel}
+    </button>
+  );
+}
+```
+
+Hook state is discriminated by `status`. Hooks protect against stale responses and expose cancellation where applicable.
+
+## Customize a field with slots
+
+```tsx
+import { FormbrewForm, type FormbrewTextFieldProps } from "@formbrew/react";
+
+function TextField({ field, id, helpId }: FormbrewTextFieldProps) {
+  return (
+    <div className="field">
+      <label htmlFor={id}>{field.label}</label>
+      <input
+        aria-describedby={field.helpText ? helpId : undefined}
+        id={id}
+        name={field.key}
+        placeholder={field.placeholder ?? undefined}
+        required={field.required}
+      />
+      {field.helpText ? <p id={helpId}>{field.helpText}</p> : null}
+    </div>
+  );
+}
+
+export function ContactForm() {
+  return (
+    <FormbrewForm
+      baseUrl="https://api.staging.formbrew.com/v1"
+      token="YOUR_PUBLIC_TOKEN"
+      slots={{ text: TextField }}
+    />
+  );
+}
+```
+
+Slots are available for every field type plus loading, load error, submit button, and status UI. Custom field slots must preserve `field.key` as the control name and render label-associated controls.
+
+## SSR and preloading
+
+Fetch the definition on a server with an explicit origin, then pass it as `initialDefinition` to avoid the initial browser fetch:
+
+```tsx
+import { createFormbrewClient } from "@formbrew/js";
+import { FormbrewForm } from "@formbrew/react";
+
+const token = process.env.FORMBREW_TOKEN!;
+const client = createFormbrewClient({
+  baseUrl: "https://api.staging.formbrew.com/v1",
+  token,
+  origin: "https://www.example.com",
+});
+const definition = await client.fetchForm();
+
+export function Page() {
+  return (
+    <FormbrewForm
+      baseUrl="https://api.staging.formbrew.com/v1"
+      initialDefinition={definition}
+      token={token}
+    />
+  );
+}
+```
+
+The React package is built as a client component. Keep private server configuration out of props, but remember that the public form token itself is publishable.

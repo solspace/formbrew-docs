@@ -1,0 +1,92 @@
+---
+title: "Custom rendering"
+description: "Build a custom form UI on top of the public definition and typed client."
+---
+
+# Custom rendering
+
+Use the headless JavaScript client or React hooks when you need complete control over markup and state while still loading the form definition from Formbrew.
+
+## Definition-driven rendering
+
+```ts
+import { createFormbrewClient } from "@formbrew/js";
+
+const client = createFormbrewClient({
+  baseUrl: "https://api.staging.formbrew.com/v1",
+  token: "YOUR_PUBLIC_TOKEN",
+});
+const definition = await client.fetchForm();
+
+for (const field of definition.fields) {
+  switch (field.type) {
+    case "TEXT":
+    case "EMAIL":
+    case "PHONE":
+    case "WEBSITE":
+      console.log(field.key, field.validationJson);
+      break;
+    case "NUMBER":
+      console.log(field.validationJson?.min, field.validationJson?.max);
+      break;
+    case "CHECKBOX":
+      console.log(field.required);
+      break;
+    case "CHECKBOX_GROUP":
+      console.log(field.configJson.options, field.validationJson);
+      break;
+    case "RADIO_GROUP":
+      console.log(field.configJson.options);
+      break;
+  }
+}
+```
+
+The field definition is a discriminated union. Checking `field.type` narrows `configJson` and `validationJson` to the correct shape.
+
+## Preserve the submission contract
+
+Custom controls must follow these rules:
+
+- Use `field.key` as the value property or HTML control name.
+- Submit choice `option.value`, not the visible option label or option ID.
+- Submit checkbox groups as arrays of option values.
+- Submit checkboxes as booleans when using the JSON client.
+- Include metadata separately from field values.
+- Render label associations and help text for accessibility.
+- Implement immediate browser validation if desired, but display API validation errors as authoritative.
+
+## Collect a native form
+
+Framework-neutral helpers are available from `@formbrew/js/form`:
+
+```ts
+import { createFormbrewClient } from "@formbrew/js";
+import {
+  collectFormbrewSubmission,
+  getCheckboxGroupValidationMessage,
+  resolveFormbrewMetadata,
+} from "@formbrew/js/form";
+
+const client = createFormbrewClient({
+  baseUrl: "https://api.staging.formbrew.com/v1",
+  token: "YOUR_PUBLIC_TOKEN",
+});
+const collected = collectFormbrewSubmission(formElement);
+const metadata = {
+  ...resolveFormbrewMetadata(() => ({ source: "custom-form" })),
+  ...collected.metadata,
+};
+
+await client.submit(collected.values, { metadata });
+```
+
+`collectFormbrewSubmission()` turns repeated string values into arrays, moves underscore-prefixed names into metadata, and ignores files.
+
+## Honeypot behavior
+
+Managed renderers create the configured honeypot automatically. For a custom native renderer, add a visually hidden text input using `definition.honeypotFieldName`. Do not use `type="hidden"`, and do not fill the input programmatically.
+
+## Definition updates
+
+The public definition always represents the current published form. If your application caches it, use `schemaVersion` to identify changes and make sure cached definitions do not outlive your deployment's compatibility assumptions.

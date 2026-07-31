@@ -1,0 +1,82 @@
+---
+title: "Management API overview"
+description: "Understand the internal API used by the Formbrew dashboard."
+---
+
+# Management API overview
+
+The Management API manages workspace resources used by the Formbrew dashboard.
+
+```text
+https://api.staging.formbrew.com/management/v1
+```
+
+<Warning>
+  The Management API is not currently available for customer-built integrations. Formbrew does not issue management API tokens or expose an external OAuth connection flow yet. This reference documents the resource contract in preparation for future access.
+</Warning>
+
+Authentication setup and integration examples are intentionally out of scope for now. The current dashboard uses authenticated workspace-scoped requests internally.
+
+The [Management API OpenAPI document](https://api.staging.formbrew.com/management/v1/openapi.json) is public and does not require management credentials.
+
+## Resource groups
+
+<CardGroup cols={2}>
+  <Card title="Identity and health" icon="heart-pulse" href="/api-reference/management-resources#identity-and-health">
+    Inspect service status and the current workspace context.
+  </Card>
+  <Card title="Forms and fields" icon="rectangle-list" href="/api-reference/management-resources#forms">
+    Create forms and maintain their definitions and layouts.
+  </Card>
+  <Card title="Tokens and submissions" icon="inbox" href="/api-reference/management-resources#form-tokens">
+    Manage public form access and submission workflow state.
+  </Card>
+  <Card title="Usage and webhooks" icon="webhook" href="/api-reference/management-resources#webhooks">
+    Read monthly usage and manage outbound destinations.
+  </Card>
+</CardGroup>
+
+## Conventions
+
+### Successful responses
+
+Resources are wrapped in `data`:
+
+```json
+{
+  "data": {
+    "id": "frm_123",
+    "name": "Contact"
+  }
+}
+```
+
+List operations use the same envelope with an array in `data`. Create operations generally return `201`; reads, updates, archive operations, revocations, and secret rotation return `200`.
+
+### Errors
+
+```json
+{
+  "error": "ValidationError",
+  "message": "A human-readable explanation.",
+  "details": []
+}
+```
+
+`details` is optional. Request bodies are strict JSON objects, so unknown properties are generally rejected.
+
+### Workspace scope
+
+Authenticated identity resolves to a workspace before resource handlers run. Forms and related resources are looked up within that workspace. Missing, archived, deleted, or out-of-workspace resources generally return `404` rather than revealing whether they exist elsewhere.
+
+### Pagination
+
+Forms, form tokens, submissions, and webhook endpoint lists are currently unpaginated. Webhook deliveries accept `limit` from 1 to 50 and default to 20.
+
+### Cache control
+
+Form-token, webhook-endpoint, secret-rotation, and webhook-delivery responses use `Cache-Control: no-store` because they contain sensitive or operational values.
+
+## OpenAPI reference
+
+Endpoint pages in this section are generated from the [published staging OpenAPI document](https://api.staging.formbrew.com/management/v1/openapi.json). The specification describes current request and response schemas; access availability may change when management credentials are introduced.

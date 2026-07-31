@@ -1,0 +1,105 @@
+---
+title: "Receive webhooks"
+description: "Receive submission.created events reliably and process duplicate deliveries safely."
+---
+
+# Receive webhooks
+
+Formbrew sends an HTTPS `POST` request to your endpoint after it accepts a form submission. Webhooks are suitable for notifications, CRM synchronization, workflow automation, and other server-side processing that should happen outside the submission request.
+
+## Create an endpoint
+
+Open a form in the Formbrew dashboard, select **Webhooks**, and create an endpoint with a name and URL. Production endpoint URLs must:
+
+- Use HTTPS on port 443
+- Resolve entirely to public IP addresses
+- Return without redirecting
+- Complete within 10 seconds
+
+Each form supports up to five webhook endpoints.
+
+Formbrew displays the endpoint signing secret once when the endpoint is created or rotated. Store the complete `whsec_...` value in your server's secret manager. Do not put it in client-side code, source control, URLs, analytics, or application logs.
+
+Changing an endpoint URL, disabling an endpoint, or rotating its secret cancels deliveries that are queued or waiting to retry. Check delivery status before making these changes. New submissions received while an endpoint is disabled do not create deliveries for it.
+
+## Request headers
+
+Every delivery includes:
+
+| Header | Description |
+| --- | --- |
+| `Content-Type` | Always `application/json` |
+| `Formbrew-Delivery-Id` | Unique delivery ID used for idempotency |
+| `Formbrew-Event` | Event name, currently `submission.created` |
+| `Formbrew-Timestamp` | Unix timestamp in seconds used by the signature |
+| `Formbrew-Signature` | `v1=<hex HMAC-SHA256>` authentication signature |
+| `User-Agent` | `Formbrew-Webhooks/1` |
+
+Header names are case-insensitive. Preserve the exact request body bytes before parsing JSON because the signature covers those bytes.
+
+## Event payload
+
+The current event type is `submission.created`, version 1:
+
+```json
+{
+  "createdAt": "2026-07-27T11:59:59.000Z",
+  "data": {
+    "formId": "frm_contact",
+    "submission": {
+      "createdAt": "2026-07-27T11:59:59.000Z",
+      "formSchemaVersion": 3,
+      "id": "sub_contact",
+      "metadata": {
+        "campaign": "launch"
+      },
+      "origin": "https://example.com",
+      "userAgent": "Mozilla/5.0 ...",
+      "values": {
+        "email": "hello@example.com",
+        "message": "Please contact me"
+      }
+    }
+  },
+  "id": "wdel_contact",
+  "type": "submission.created",
+  "version": 1
+}
+```
+
+The top-level `id` is the delivery ID and matches `Formbrew-Delivery-Id`. The nested submission `id` identifies the submission. `metadata`, `origin`, and `userAgent` are always present but may be `null`. Treat unknown object fields as forward-compatible additions, but reject event names or major versions your application does not support.
+
+## Process a delivery
+
+Handle each request in this order:
+
+1. Read the body as raw bytes and enforce a reasonable body-size limit.
+2. Validate the timestamp and signature before parsing or trusting the payload.
+3. Parse JSON and validate the event type, version, and fields your application needs.
+4. Confirm the header delivery ID and event name match the payload.
+5. Atomically record `Formbrew-Delivery-Id` with a unique constraint before applying side effects.
+6. Return a successful `2xx` response as soon as the event is durably accepted.
+
+Do not perform slow downstream work before responding. Store or enqueue the verified event, return `204` or another `2xx`, and process it asynchronously.
+
+## Delivery and retries
+
+Delivery is **at least once**. The same delivery ID can arrive more than once if a connection fails or a worker stops after your endpoint succeeds but before Formbrew records the result. Duplicate requests are expected and must not repeat side effects.
+
+Formbrew attempts a delivery up to five times: immediately, then after approximately 1 minute, 5 minutes, 30 minutes, and 2 hours.
+
+| Your response | Formbrew behavior |
+| --- | --- |
+| `200`-`299` | Mark the delivery successful |
+| `408`, `425`, `429`, or `500`-`599` | Retry according to the delivery schedule |
+| Other `400`-`499` | Treat as a permanent rejection and stop retrying |
+| `300`-`399` | Treat as a permanent rejection and stop retrying; redirects are not followed |
+| Timeout or network failure | Retry according to the delivery schedule |
+
+Return `401` for an invalid or stale signature. Return `400` for a signed request with an unsupported or malformed event. These permanent responses help surface configuration and contract errors instead of retrying requests that cannot succeed.
+
+## Test locally
+
+This repository includes a local receiver that runs the same validation checks and displays delivery attempts in a browser. When working from source, see `test/harness/webhooks/README.md` for setup and ngrok instructions.
+
+For production receiver code, continue with [verify webhook signatures](./verify-signatures.md).
