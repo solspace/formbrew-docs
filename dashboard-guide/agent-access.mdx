@@ -1,0 +1,43 @@
+---
+title: "Agent access"
+description: "Give a coding agent scoped access to your forms with a management token, and review what it changed."
+---
+
+A management token lets a coding agent create and edit forms in one workspace without your dashboard sign-in. You decide exactly what each token can do, and you can revoke it at any time. Only workspace owners and administrators manage tokens.
+
+## Create a token
+
+1. Open the menu with your name at the bottom of the sidebar, select the **Settings for** item that shows the workspace name, and go to **Agent access**.
+2. Click **Create management token**.
+3. Enter a name that tells you which agent or project uses the token.
+4. Choose permissions. See [Choose permissions](#choose-permissions).
+5. Optionally set an expiration date. Tokens don't expire unless you set one.
+6. Click **Create token**.
+
+Copy the token and the workspace ID before you close the dialog. Formbrew shows the token only once and keeps only a hash of it.
+
+Give the token to your agent through its secure configuration or an environment variable. Don't paste it into a chat, commit it to a repository, or put it in website code. [Managed mode](/agents/managed-mode) explains how agents use it.
+
+## Choose permissions
+
+New tokens start with the **Form implementation** preset, and **Use form implementation preset** restores it. It lets the agent create forms and gives the forms it creates every permission except archiving: reading and editing them, managing allowed origins, publishing, and managing public form tokens. It grants nothing on your existing forms.
+
+To let the agent work on existing forms, grant actions on **All forms** or add forms under **Specific forms**. Under **New forms**, choose whether the token can create forms and which actions it receives on them. **All forms** also covers forms created later, so Formbrew warns you before you save it. Each selection has a **Select all** control that selects every action available today; actions added to Formbrew later are never added to existing tokens.
+
+Read access is always included when a selection grants any other action. Changing email settings also includes reading them, and changing submissions also includes reading them.
+
+Email settings, spam protection, and submission permissions are never part of a preset. Formbrew warns you when you select them: an agent that can read submissions can copy the personal data in them, and spam protection changes affect how forms resist abuse. Agents can move submissions to trash but can never restore or permanently delete them.
+
+Tokens can never change billing, members, workspace settings, or webhooks, add email recipients, export submissions, or manage other tokens. A token also stops working while the person who created it is no longer an owner or administrator.
+
+## Change or revoke a token
+
+In **Agent access**, click **Edit access** to rename a token or replace its permissions. The new permissions apply to the token's next request.
+
+Click **Revoke** to stop a token immediately. You can't undo a revocation. Create a new token instead; it doesn't inherit the old token's permissions.
+
+The list shows when each token was last used.
+
+## Review activity
+
+Open **Activity** in the sidebar to see recent changes to forms, fields, public form tokens, management tokens, and submissions. Each entry shows who made the change. Changes made with a token show the token's name and prefix and the person who created it, even after the token is revoked. Filter by token to see everything one agent changed.

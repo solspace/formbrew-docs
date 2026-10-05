@@ -2,6 +2,10 @@
 # .git, .github, .claude, .agents, .idea, node_modules,
 # README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md
 
-# Draft content
+# Private authoring files. The mirror export never includes them.
+AGENTS.md
+publication.json
+
+# Unreleased content
 drafts/
 *.draft.mdx

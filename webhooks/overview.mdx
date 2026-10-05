@@ -3,24 +3,43 @@ title: "Receive webhooks"
 description: "Receive submission.created events reliably and process duplicate deliveries safely."
 ---
 
-# Receive webhooks
-
 Formbrew sends an HTTPS `POST` request to your endpoint after it accepts a form submission. Webhooks are suitable for notifications, CRM synchronization, workflow automation, and other server-side processing that should happen outside the submission request.
 
-## Create an endpoint
+Setting up a webhook takes three steps: build a receiver on your server, create the endpoint in the dashboard, and store the signing secret where only your receiver can read it.
 
-Open a form in the Formbrew dashboard, select **Webhooks**, and create an endpoint with a name and URL. Production endpoint URLs must:
+## Build a receiver
 
-- Use HTTPS on port 443
-- Resolve entirely to public IP addresses
-- Return without redirecting
-- Complete within 10 seconds
+Your receiver is an HTTPS route on your own server, such as `https://hooks.example.com/formbrew`. Production endpoint URLs must:
 
-Each form supports up to five webhook endpoints.
+- Use HTTPS on port 443.
+- Use a public hostname that resolves only to public IP addresses. Formbrew rejects `localhost` and hostnames ending in `.local`, `.internal`, `.test`, `.example`, `.invalid`, `.localhost`, or `.home.arpa`.
+- Contain no username, password, or fragment, and be at most 2,048 characters.
+- Respond without redirecting. Formbrew does not follow redirects.
+- Respond within 10 seconds.
 
-Formbrew displays the endpoint signing secret once when the endpoint is created or rotated. Store the complete `whsec_...` value in your server's secret manager. Do not put it in client-side code, source control, URLs, analytics, or application logs.
+Formbrew reads only the response status code and ignores the response body.
 
-Changing an endpoint URL, disabling an endpoint, or rotating its secret cancels deliveries that are queued or waiting to retry. Check delivery status before making these changes. New submissions received while an endpoint is disabled do not create deliveries for it.
+Follow [process a delivery](#process-a-delivery) for the receiver logic, and [verify webhook signatures](/webhooks/verify-signatures) for the signature code.
+
+## Create the endpoint in the dashboard
+
+1. Open the form in the Formbrew dashboard and select **Webhooks**.
+2. Select **Add endpoint**.
+3. Enter an **Endpoint name** and the **Destination URL** of your receiver.
+4. Select **Create endpoint**.
+5. Copy the signing secret from the dialog with **Copy secret**.
+
+The number of active endpoints per form depends on your workspace plan. The **Webhooks** page tells you when the form has reached its capacity.
+
+## Store the signing secret
+
+Formbrew displays the complete signing secret only once, when you create the endpoint or rotate its secret. Afterward the dashboard shows only its last eight characters.
+
+Store the complete `whsec_...` value in server-side secret storage, such as your hosting platform's secret manager, and give only the receiver access to it. Do not put it in client-side code, browser-exposed configuration, source control, URLs, analytics, or application logs.
+
+If you lose the secret or it may have been exposed, rotate it. See [secret rotation](/webhooks/verify-signatures#secret-rotation).
+
+Changing an endpoint URL, disabling or deleting an endpoint, or rotating its secret cancels deliveries that are queued or waiting to retry. Check delivery status before making these changes. New submissions received while an endpoint is disabled do not create deliveries for it.
 
 ## Request headers
 
@@ -67,7 +86,11 @@ The current event type is `submission.created`, version 1:
 }
 ```
 
-The top-level `id` is the delivery ID and matches `Formbrew-Delivery-Id`. The nested submission `id` identifies the submission. `metadata`, `origin`, and `userAgent` are always present but may be `null`. Treat unknown object fields as forward-compatible additions, but reject event names or major versions your application does not support.
+The top-level `id` is the delivery ID and matches `Formbrew-Delivery-Id`. The nested submission `id` identifies the submission. `metadata`, `origin`, and `userAgent` are always present but may be `null`.
+
+`values` uses field keys and contains the accepted, normalized values. It includes Hidden values but never Confirm or Content fields. Values and metadata come from website visitors, so treat them as untrusted input.
+
+Treat unknown object fields as forward-compatible additions, but reject event names or major versions your application does not support.
 
 ## Process a delivery
 
@@ -78,28 +101,34 @@ Handle each request in this order:
 3. Parse JSON and validate the event type, version, and fields your application needs.
 4. Confirm the header delivery ID and event name match the payload.
 5. Atomically record `Formbrew-Delivery-Id` with a unique constraint before applying side effects.
-6. Return a successful `2xx` response as soon as the event is durably accepted.
+6. Return a successful `2xx` response as soon as you have durably accepted the event.
 
 Do not perform slow downstream work before responding. Store or enqueue the verified event, return `204` or another `2xx`, and process it asynchronously.
 
 ## Delivery and retries
 
-Delivery is **at least once**. The same delivery ID can arrive more than once if a connection fails or a worker stops after your endpoint succeeds but before Formbrew records the result. Duplicate requests are expected and must not repeat side effects.
+Delivery is **at least once**. The same delivery ID can arrive more than once if a connection fails or a worker stops after your endpoint succeeds but before Formbrew records the result. Expect duplicate requests, and make sure they do not repeat side effects.
 
-Formbrew attempts a delivery up to five times: immediately, then after approximately 1 minute, 5 minutes, 30 minutes, and 2 hours.
+Formbrew attempts a delivery up to five times: immediately, then after approximately 1 minute, 5 minutes, 30 minutes, and 2 hours. Each retry delay varies randomly by up to 20 percent.
 
 | Your response | Formbrew behavior |
 | --- | --- |
 | `200`-`299` | Mark the delivery successful |
 | `408`, `425`, `429`, or `500`-`599` | Retry according to the delivery schedule |
 | Other `400`-`499` | Treat as a permanent rejection and stop retrying |
-| `300`-`399` | Treat as a permanent rejection and stop retrying; redirects are not followed |
+| `300`-`399` | Treat as a permanent rejection and stop retrying; Formbrew does not follow redirects |
 | Timeout or network failure | Retry according to the delivery schedule |
+
+For a retryable response, you can send a `Retry-After` header in seconds or as an HTTP date. Formbrew waits for the longer of `Retry-After` and the scheduled delay, up to 24 hours.
+
+If the endpoint hostname resolves to a non-public IP address at delivery time, the delivery fails permanently.
 
 Return `401` for an invalid or stale signature. Return `400` for a signed request with an unsupported or malformed event. These permanent responses help surface configuration and contract errors instead of retrying requests that cannot succeed.
 
-## Test locally
+Check **Recent deliveries** on the form's **Webhooks** page for each delivery's status, attempts, and response code.
 
-This repository includes a local receiver that runs the same validation checks and displays delivery attempts in a browser. When working from source, see `test/harness/webhooks/README.md` for setup and ngrok instructions.
+## Test your receiver
 
-For production receiver code, continue with [verify webhook signatures](./verify-signatures.md).
+Formbrew can deliver only to a public HTTPS URL. To test a receiver that runs on your computer, expose it through an HTTPS tunnel with a public hostname, create an endpoint for the tunnel URL, and submit the form from an allowed origin. Formbrew stores each test submission like any other submission.
+
+Continue with [verify webhook signatures](/webhooks/verify-signatures) for receiver code.

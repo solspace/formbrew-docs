@@ -3,9 +3,14 @@ title: "React SDK"
 description: "Render Formbrew forms with a managed React component, hooks, and slots."
 ---
 
-# React SDK
+`@formbrew/react` supports React 18.2 and React 19. It provides a managed form, headless hooks, accessible default fields, and typed slots. Use it for React projects, including Next.js, Remix, and Vite applications.
 
-`@formbrew/react` supports React 18.2 and React 19. It provides a managed form, headless hooks, accessible default fields, and typed slots.
+| Entry | Contents |
+| --- | --- |
+| `@formbrew/react` | `FormbrewForm`, `FormbrewFields`, field components, hooks, and re-exported `@formbrew/js` types |
+| `@formbrew/react/hooks` | `useFormbrewClient`, `useFormbrewDefinition`, and `useFormbrewSubmit` |
+| `@formbrew/react/fields` | `FormbrewFields` and the default field components |
+| `@formbrew/react/styles.css` | Optional default styles, shared with `@formbrew/js` |
 
 ## Install
 
@@ -27,8 +32,11 @@ bun add @formbrew/react
 ```
 </CodeGroup>
 
+The current version is `0.4.0`. It depends on the matching `@formbrew/js` version, which your package manager installs automatically.
+
 ## Managed form
 
+{/* docs-check: typecheck */}
 ```tsx
 import { FormbrewForm } from "@formbrew/react";
 import "@formbrew/react/styles.css";
@@ -36,8 +44,7 @@ import "@formbrew/react/styles.css";
 export function ContactForm() {
   return (
     <FormbrewForm
-      baseUrl="https://api.staging.formbrew.com/v1"
-      token="YOUR_PUBLIC_TOKEN"
+      token="YOUR_PUBLIC_FORM_TOKEN"
       metadata={() => ({ source: window.location.pathname })}
       onSuccess={(result) => console.log(result.id, result.message)}
       onSubmitError={(error) => console.error(error.code, error.message)}
@@ -46,30 +53,42 @@ export function ContactForm() {
 }
 ```
 
-The component loads and renders the current definition, includes the honeypot, performs browser and checkbox-group validation, prevents duplicate pending submissions, and resets after success.
+The component loads and renders the current definition, includes the honeypot, performs browser, checkbox-group, and confirmation validation, prevents duplicate pending submissions, and resets after success.
 
-Set `resetOnSuccess={false}` to preserve values after an accepted submission.
+| Prop | Purpose |
+| --- | --- |
+| `token` | Public form token. Use with optional `baseUrl`, `origin`, and `fetch`. |
+| `client` | A client from `createFormbrewClient()`. Pass either `client` or `token`, never both. |
+| `initialDefinition` | A definition you already fetched. The component validates it and skips its initial fetch. |
+| `metadata` | Metadata object, or a function called at submission time. |
+| `onSuccess` | Called with the submission result and the form handle. |
+| `onSubmitError` | Called with a `FormbrewError` when a submission fails. |
+| `onLoadError` | Called with a `FormbrewError` when the definition cannot load. |
+| `resetOnSuccess` | Set to `false` to keep entered values after an accepted submission. Defaults to `true`. |
+| `slots` | Replacement components for fields and form states. |
+| `ref` | A `FormbrewFormHandle` with `abort()` and `reset()`. |
+
+Other native `<form>` attributes, such as `className` and `aria-label`, pass through to the form element.
 
 ## Use an existing client
 
-Pass either a `token` and client options or a configured `client`, never both:
-
+{/* docs-check: typecheck */}
 ```tsx
 import { createFormbrewClient } from "@formbrew/js";
 import { FormbrewForm } from "@formbrew/react";
 
-const client = createFormbrewClient({
-  baseUrl: "https://api.staging.formbrew.com/v1",
-  token: "YOUR_PUBLIC_TOKEN",
-});
+const client = createFormbrewClient({ token: "YOUR_PUBLIC_FORM_TOKEN" });
 
 export function ContactForm() {
   return <FormbrewForm client={client} />;
 }
 ```
 
+Create the client outside the component, or memoize it with `useFormbrewClient()`. A new client on every render reloads the form.
+
 ## Headless hooks
 
+{/* docs-check: typecheck */}
 ```tsx
 import {
   useFormbrewClient,
@@ -78,10 +97,7 @@ import {
 } from "@formbrew/react/hooks";
 
 export function HeadlessForm() {
-  const client = useFormbrewClient({
-    baseUrl: "https://api.staging.formbrew.com/v1",
-    token: "YOUR_PUBLIC_TOKEN",
-  });
+  const client = useFormbrewClient({ token: "YOUR_PUBLIC_FORM_TOKEN" });
   const definition = useFormbrewDefinition({ client });
   const submission = useFormbrewSubmit({
     client,
@@ -99,7 +115,7 @@ export function HeadlessForm() {
   return (
     <button
       disabled={submission.status === "submitting"}
-      onClick={() => void submission.submit({ email: "hello@example.com" })}
+      onClick={() => void submission.submit({ email: "hello@example.com" }).catch(() => {})}
     >
       {definition.definition.submitButtonLabel}
     </button>
@@ -107,67 +123,193 @@ export function HeadlessForm() {
 }
 ```
 
-Hook state is discriminated by `status`. Hooks protect against stale responses and expose cancellation where applicable.
+The `status` property discriminates hook state:
+
+- `useFormbrewDefinition()` returns `idle`, `loading`, `success`, or `error`, plus `reload()` and `abort()`. Pass `enabled: false` to delay loading, or `initialDefinition` to skip the fetch.
+- `useFormbrewSubmit()` returns `idle`, `submitting`, `success`, or `error`, plus `submit()`, `abort()`, and `reset()`. A second `submit()` call while one is pending returns the pending promise. `submit()` also rejects on failure, so handle its promise.
+
+Both hooks ignore stale responses and abort pending requests when the client changes or the component unmounts.
+
+## Render fields in your own form
+
+`FormbrewFields` renders the complete field array with the same default components and slots as the managed form, with Hidden inputs first. Your form owns submission, status, the honeypot, and form-level checks such as checkbox-group counts:
+
+{/* docs-check: typecheck */}
+```tsx
+import { collectFormbrewSubmission } from "@formbrew/js/form";
+import { FormbrewFields } from "@formbrew/react";
+import {
+  useFormbrewClient,
+  useFormbrewDefinition,
+  useFormbrewSubmit,
+} from "@formbrew/react/hooks";
+import { useId } from "react";
+import "@formbrew/react/styles.css";
+
+export function CustomForm() {
+  const instanceId = useId();
+  const client = useFormbrewClient({ token: "YOUR_PUBLIC_FORM_TOKEN" });
+  const form = useFormbrewDefinition({ client });
+  const submission = useFormbrewSubmit({ client });
+
+  if (form.status === "error") {
+    return <p role="alert">{form.error.message}</p>;
+  }
+
+  if (form.status !== "success") {
+    return <p>Loading form...</p>;
+  }
+
+  return (
+    <form
+      className="fb-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const { metadata, values } = collectFormbrewSubmission(event.currentTarget);
+        void submission.submit(values, { metadata }).catch(() => {});
+      }}
+    >
+      <FormbrewFields fields={form.definition.fields} instanceId={instanceId} />
+      <div className="fb-honeypot" aria-hidden="true">
+        <label>
+          Leave this field blank
+          <input name={form.definition.honeypotFieldName} autoComplete="off" tabIndex={-1} />
+        </label>
+      </div>
+      <button className="fb-submit" disabled={submission.status === "submitting"} type="submit">
+        {form.definition.submitButtonLabel}
+      </button>
+      <p className="fb-status" role="status">
+        {submission.error?.message ?? submission.result?.message}
+      </p>
+    </form>
+  );
+}
+```
+
+Pass a unique `instanceId`, such as the value of `useId()`. For confirmation feedback in your own form, call `synchronizeConfirmFields()` from `@formbrew/js/form`; see [custom rendering](/integrations/custom-rendering#collect-a-native-form). Prefer `FormbrewForm` when you want that wiring managed for you.
 
 ## Customize a field with slots
 
-```tsx
-import { FormbrewForm, type FormbrewTextFieldProps } from "@formbrew/react";
+Wrap a default field component to keep its label, help text, native constraints, and multiline behavior:
 
-function TextField({ field, id, helpId }: FormbrewTextFieldProps) {
+{/* docs-check: typecheck */}
+```tsx
+import {
+  FormbrewForm,
+  FormbrewTextField,
+  type FormbrewTextFieldProps,
+} from "@formbrew/react";
+
+function TextField(props: FormbrewTextFieldProps) {
   return (
-    <div className="field">
-      <label htmlFor={id}>{field.label}</label>
-      <input
-        aria-describedby={field.helpText ? helpId : undefined}
-        id={id}
-        name={field.key}
-        placeholder={field.placeholder ?? undefined}
-        required={field.required}
-      />
-      {field.helpText ? <p id={helpId}>{field.helpText}</p> : null}
+    <div className="fb-field my-text-field">
+      <FormbrewTextField {...props} />
     </div>
   );
 }
 
 export function ContactForm() {
-  return (
-    <FormbrewForm
-      baseUrl="https://api.staging.formbrew.com/v1"
-      token="YOUR_PUBLIC_TOKEN"
-      slots={{ text: TextField }}
-    />
-  );
+  return <FormbrewForm token="YOUR_PUBLIC_FORM_TOKEN" slots={{ text: TextField }} />;
 }
 ```
 
-Slots are available for every field type plus loading, load error, submit button, and status UI. Custom field slots must preserve `field.key` as the control name and render label-associated controls.
+Slots are available for `text`, `email`, `number`, `phone`, `website`, `checkbox`, `checkboxGroup`, `radioGroup`, `select`, `dateTime`, `hidden`, `confirm`, `content`, `submitButton`, `status`, `loading`, and `loadError`.
 
-## SSR and preloading
+Field slots receive the narrowed `field` definition plus hydration-safe `id` and `helpId` values. Checkbox-group and radio-group slots also receive `optionIds`, and Confirm slots receive their resolved `target` field. A slot that replaces the markup completely must:
 
-Fetch the definition on a server with an explicit origin, then pass it as `initialDefinition` to avoid the initial browser fetch:
+- Use `field.key` as the control name.
+- Associate the label with `id` and render the help element referenced by `aria-describedby`.
+- Handle the field's settings, such as multiline Text and Number constraints.
+- Render Hidden fields as bare hidden inputs and Content fields without a named control.
+
+## SSR and client boundaries
+
+The package's entries are client component code; they begin with a `"use client"` directive. In React Server Components frameworks, such as the Next.js App Router:
+
+- A Server Component can render `FormbrewForm` with serializable props such as `token`, `baseUrl`, `initialDefinition`, and a metadata object.
+- Pass functions, such as `onSuccess`, `metadata` callbacks, and `slots`, from your own Client Component.
+- Hooks work only in Client Components.
+
+Without `initialDefinition`, the server renders the loading state and the browser fetches the definition after hydration. The browser request carries the visitor's real `Origin`.
+
+To render the full form on the server, fetch the definition on the server with an explicit allowed origin, then pass it as `initialDefinition`:
 
 ```tsx
+// Server Component
 import { createFormbrewClient } from "@formbrew/js";
-import { FormbrewForm } from "@formbrew/react";
+import { ContactForm } from "./contact-form";
 
-const token = process.env.FORMBREW_TOKEN!;
 const client = createFormbrewClient({
-  baseUrl: "https://api.staging.formbrew.com/v1",
-  token,
+  token: "YOUR_PUBLIC_FORM_TOKEN",
   origin: "https://www.example.com",
 });
-const definition = await client.fetchForm();
 
-export function Page() {
+export default async function ContactPage() {
+  const definition = await client.fetchForm();
+
+  return <ContactForm definition={definition} />;
+}
+```
+
+{/* docs-check: typecheck */}
+```tsx
+"use client";
+
+import { FormbrewForm, type PublicFormDefinition } from "@formbrew/react";
+
+type ContactFormProps = {
+  definition: PublicFormDefinition;
+};
+
+export function ContactForm({ definition }: ContactFormProps) {
   return (
     <FormbrewForm
-      baseUrl="https://api.staging.formbrew.com/v1"
       initialDefinition={definition}
-      token={token}
+      token="YOUR_PUBLIC_FORM_TOKEN"
+      onSuccess={(result) => console.log(result.message)}
     />
   );
 }
 ```
 
-The React package is built as a client component. Keep private server configuration out of props, but remember that the public form token itself is publishable.
+Keep these points in mind:
+
+- Pass the same `initialDefinition` to the server render and to hydration. A different definition causes a hydration mismatch.
+- Cache server-fetched definitions with your framework's data caching. Server requests share one IP address and count against the same per-IP [rate limits](/integrations/submissions-and-errors#request-limits).
+- Do not pass `origin` to a form that loads in the browser. Browsers set `Origin` themselves.
+- Several forms in one React tree keep independent IDs. When you hydrate separate React roots on one page, give each root its own `identifierPrefix` and use the same prefix on the server and the client.
+- The managed form hides its honeypot with an inline `style` attribute and the `.fb-honeypot` class. If your Content Security Policy blocks inline styles, the browser ignores server-rendered inline styles, so import `@formbrew/react/styles.css` or add your own `.fb-honeypot` rule.
+
+## Metadata
+
+The SDK resolves static metadata and metadata callbacks at submission time. The managed form also collects controls whose names begin with `_` as metadata and removes the first underscore. These values override configured keys.
+
+## Cancellation and reset
+
+Use the form handle to cancel pending work or reset the form:
+
+{/* docs-check: typecheck */}
+```tsx
+import { FormbrewForm, type FormbrewFormHandle } from "@formbrew/react";
+import { useRef } from "react";
+
+export function ResettableForm() {
+  const form = useRef<FormbrewFormHandle>(null);
+
+  return (
+    <>
+      <FormbrewForm ref={form} token="YOUR_PUBLIC_FORM_TOKEN" />
+      <button onClick={() => form.current?.reset()} type="button">
+        Clear form
+      </button>
+    </>
+  );
+}
+```
+
+Cancellation does not produce visible error state. Changing the client or unmounting the form also aborts stale work.
+
+## Errors
+
+Load failures render the `loadError` slot, which receives the `error` and a `retry()` function, and call `onLoadError`. Submission failures appear in the status area and call `onSubmitError`. Both receive a `FormbrewError`; see [JavaScript SDK errors](/integrations/javascript#errors) and [error codes](/integrations/submissions-and-errors#error-codes).

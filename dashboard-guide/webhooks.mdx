@@ -3,9 +3,9 @@ title: "Manage webhooks"
 description: "Create webhook destinations and monitor submission delivery attempts."
 ---
 
-# Manage webhooks
-
 Webhooks send a signed `submission.created` event to your server after Formbrew accepts a submission. Open a form and select **Webhooks** to manage destinations and inspect recent deliveries.
+
+Owners, admins, and editors can manage webhook endpoints. Viewers can see endpoints and deliveries.
 
 ## Create an endpoint
 
@@ -16,38 +16,52 @@ Select **Add endpoint** and provide:
 | Endpoint name | 1 to 100 characters, for example `CRM intake` |
 | Destination URL | An HTTPS URL of at most 2,048 characters |
 
-Production destinations must use HTTPS on port 443, resolve to public network addresses, avoid redirects, and respond within 10 seconds. Each form supports up to five endpoints, including disabled endpoints.
+Select **Create endpoint**.
+
+Destinations must use HTTPS on port 443 and resolve to public network addresses. Formbrew does not follow redirects. Your endpoint must respond within 10 seconds.
+
+## Active endpoint limit
+
+Your workspace plan sets how many active endpoints each form can have. The **Webhook endpoints** section shows how many are active and the limit. Disabled endpoints do not count toward the limit.
+
+When the form reaches the limit, **Add endpoint** is unavailable. Disable or delete an endpoint before you add or enable another one.
+
+If a form has more enabled endpoints than the plan allows, only the oldest ones receive events. The others show **Plan paused**.
 
 ## Store the signing secret
 
-Formbrew displays the complete `whsec_...` secret once after endpoint creation or secret rotation. Copy it to your server-side secret manager before closing the dialog.
+Formbrew displays the complete `whsec_...` signing secret once, after you create an endpoint or rotate its secret. Select **Copy secret** and store it in your server-side secret manager before you close the dialog.
 
 <Warning>
-  The complete webhook secret cannot be viewed again. Do not put it in frontend code. Rotate it if it may have been exposed.
+  You cannot view the complete signing secret again. Do not put it in frontend code. Rotate it if it may have been exposed.
 </Warning>
 
-## Enable, edit, and delete
+## Edit, disable, rotate, and delete
 
-- Disabling an endpoint stops new deliveries and cancels queued retries.
+Each endpoint card shows whether the endpoint is **Live**, **Paused**, or **Plan paused**, and the last characters of its secret.
+
+- Select **Edit** to change the name or URL, or to clear **Endpoint enabled**. Disabling an endpoint stops new deliveries and cancels queued retries.
 - Changing the destination URL cancels queued retries.
-- Rotating the secret invalidates the old secret and cancels queued retries.
-- Deleting an endpoint disables it, cancels queued retries, and frees endpoint capacity.
+- Select **Rotate secret**, then **Rotate and reveal**, to replace the secret. The old secret stops working immediately, and Formbrew cancels queued retries.
+- Select **Delete**, then **Delete endpoint**, to remove the endpoint. Deleting cancels queued retries and frees endpoint capacity.
 
 A delivery already in progress may still finish after a configuration change.
 
-## Transmission log
+## Recent deliveries
 
-The **Recent deliveries** table shows the latest 20 records across the form. Select **Refresh** to reload it.
+The **Recent deliveries** table shows the latest 20 delivery records across the form. Select **Refresh** to reload it.
 
 | Status | Meaning |
 | --- | --- |
 | Pending | Waiting for its first attempt |
-| Delivering | A worker is sending the request |
-| Retry scheduled | The last attempt failed and another is scheduled |
-| Succeeded | The destination returned a successful response |
-| Abandoned | All attempts were used |
-| Canceled | Endpoint configuration canceled the delivery |
+| Delivering | Formbrew is sending the request |
+| Retry scheduled | The last attempt failed, and Formbrew scheduled another |
+| Succeeded | The destination returned a `2xx` response |
+| Abandoned | Formbrew makes no more attempts |
+| Canceled | An endpoint configuration change canceled the delivery |
 
-Formbrew attempts delivery immediately, then after approximately 1 minute, 5 minutes, 30 minutes, and 2 hours, for at most five attempts. The dashboard does not currently support manual retries or test events.
+Formbrew retries network errors, timeouts, and `408`, `425`, `429`, and `5xx` responses. Other responses, including redirects and most `4xx` responses, abandon the delivery immediately.
+
+Formbrew attempts delivery immediately, then after approximately 1 minute, 5 minutes, 30 minutes, and 2 hours, for at most five attempts. When your endpoint returns a `Retry-After` header, Formbrew waits at least that long, up to 24 hours. The dashboard does not currently support manual retries or test events.
 
 Continue with [Receive webhooks](/webhooks/overview) to implement your endpoint and [Verify webhook signatures](/webhooks/verify-signatures) before trusting payloads.

@@ -3,37 +3,41 @@ title: "Fields"
 description: "Reference for every Formbrew field type, setting, and validation rule."
 ---
 
-# Fields
+Formbrew has 13 field types. Most fields collect an answer. **Confirm** checks an answer without storing it, and **Content** only displays text.
 
-Every field has a label, submission key, type, width, required state, and optional help text. Input fields can also have placeholders and type-specific validation.
+Select a field in the builder to edit its settings in the **Edit field** panel. Changes stay in your draft until you select **Save changes**.
 
 ## Common settings
 
 | Setting | Behavior |
 | --- | --- |
-| Label | Visible field name. Labels are required and trimmed when saved. |
-| Key | Property name in submissions. Keys use lowercase letters, numbers, and underscores. |
-| Type | Control and validation behavior. A field can be changed to another type. |
-| Width | Full, Half, Third, or Two thirds. Widths collapse on small screens. |
-| Required | Requires a value, a checked checkbox, or at least one group selection. |
-| Placeholder | Hint inside Text, Email, Number, Phone, and Website inputs. |
-| Help text | Supporting text displayed below the control. |
+| Label | Visible field name. Labels are required, and Formbrew trims them when you save. |
+| Key | Property name in submissions and webhook payloads. See [Field keys](/dashboard-guide/form-builder#field-keys). |
+| Type | Control and validation behavior. You can change a field to another type. |
+| Required | Requires an answer before Formbrew accepts the submission. |
+| Placeholder | Hint inside Text, Email, Number, Phone, Website, and Select inputs. |
+| Help text | Supporting text shown with the field. Not available for Hidden and Content fields. |
+
+Hidden, Confirm, and Content fields have no **Required** setting. Content fields also have no **Key** setting.
+
+When you change a field's type, Formbrew keeps its label and key. If the new type needs options and the field has none, Formbrew adds two default options. If the new type has no placeholder or **Required** setting, Formbrew clears that setting.
 
 ## Text
 
-A single-line text input for names, subjects, short answers, and other unrestricted text.
+A text input for names, subjects, messages, and other unrestricted text.
 
 | Option | Rule |
 | --- | --- |
+| Multiple lines | **Allow multi-line answers** shows a resizable text area instead of a single-line input |
 | Minimum length | Integer from 0 to 10,000 |
 | Maximum length | Integer from 0 to 10,000 and not lower than the minimum |
 | Required | Rejects missing, empty, or whitespace-only values |
 
-Non-empty text is stored exactly as submitted and is not trimmed.
+Single-line Text replaces each line break with a space. Multi-line Text keeps line breaks as plain text. Otherwise, Formbrew stores text exactly as submitted and does not trim it.
 
 ## Email
 
-An email input with browser and backend email validation.
+An email input with browser and server-side email validation.
 
 | Option | Rule |
 | --- | --- |
@@ -41,7 +45,7 @@ An email input with browser and backend email validation.
 | Maximum length | Integer from 0 to 10,000 and not lower than the minimum |
 | Required | Requires a valid email address |
 
-Email values are trimmed before validation and storage.
+Formbrew trims email values before validation and storage. It rejects addresses longer than 320 characters.
 
 ## Number
 
@@ -51,9 +55,12 @@ A numeric input for quantities, scores, prices, and other finite numbers.
 | --- | --- |
 | Minimum value | Lowest accepted number, including decimals |
 | Maximum value | Highest accepted number, including decimals |
-| Only allow whole numbers | Rejects decimal values and sets the browser step to `1` |
+| Maximum decimal places | Integer from 0 to 15. Use `0` to accept whole numbers only |
+| Negative values | **Allow negative numbers** is on by default. Turn it off to reject values below zero |
 
-The minimum cannot exceed the maximum. Numeric strings are accepted by the API when they represent finite numbers.
+The minimum cannot exceed the maximum. When the field does not allow negative numbers, the minimum and maximum cannot be negative.
+
+Formbrew rejects values with more decimal places than allowed. It does not round them. The API also accepts numeric strings that represent finite numbers.
 
 ## Phone
 
@@ -64,7 +71,7 @@ A telephone input that accepts free-form phone text.
 | Minimum length | Integer from 0 to 64 |
 | Maximum length | Integer from 0 to 64 and not lower than the minimum |
 
-Phone values are trimmed. Formbrew does not validate countries, prefixes, or telephone-number formats.
+Formbrew trims phone values and limits them to 64 characters. Formbrew does not validate countries, prefixes, or telephone-number formats.
 
 ## Website
 
@@ -74,17 +81,17 @@ A URL input for absolute website addresses.
 | --- | --- |
 | Minimum length | Integer from 0 to 10,000 |
 | Maximum length | Integer from 0 to 10,000 and not lower than the minimum |
-| Require HTTPS | Accepts only URLs beginning with `https://` |
+| URL protocol | **Require HTTPS** accepts only URLs beginning with `https://` |
 
-Website values are trimmed and must use HTTP or HTTPS. Relative URLs and other protocols are rejected.
+Website values must use HTTP or HTTPS. Formbrew trims them and does not add a missing scheme. It rejects relative URLs and other protocols.
 
 ## Checkbox
 
-A single boolean checkbox for consent, acknowledgement, or yes/no choices. When required, it must be checked. An omitted optional checkbox is stored as `false`.
+A single checkbox for consent, acknowledgement, or yes/no choices. When the field is required, visitors must check it. Formbrew stores an omitted optional checkbox as `false`.
 
 The API accepts booleans and common HTML checkbox strings such as `on`, `true`, `yes`, and `1`.
 
-## Checkbox group
+## Checkboxes
 
 A set of options where visitors can select more than one value.
 
@@ -94,24 +101,96 @@ A set of options where visitors can select more than one value.
 | Maximum selections | Nonnegative integer no greater than the option count |
 | Required | Makes the effective minimum at least one |
 
-Duplicate selections and values that are not active options are rejected. An omitted optional checkbox group is stored as an empty array.
+Formbrew rejects duplicate selections and values that are not active options. It stores an omitted optional **Checkboxes** field as an empty array.
 
-## Radio group
+## Radios
 
-A set of options where visitors can select exactly one value. A required radio group must have a selection. The submitted value must match an active option.
+A set of options where visitors can select exactly one value. A required **Radios** field must have a selection. The submitted value must match an active option.
 
-Radio groups do not support custom minimum or maximum selection rules.
+**Radios** fields do not support minimum or maximum selection rules.
+
+## Select
+
+A dropdown where visitors choose one option. **Select** supports a placeholder. The submitted value must match an active option, and a required **Select** field must have a selection.
+
+**Select** fields do not support minimum or maximum selection rules.
+
+## Date / Time
+
+A date picker, time picker, or both. Use **Capture** to choose **Date**, **Time**, or **Date and time**.
+
+| Capture | Stored value example |
+| --- | --- |
+| Date | `2026-03-14` |
+| Time | `09:30:00` |
+| Date and time | `2026-03-14T09:30:00` |
+
+Values have no time zone. Formbrew stores the date and time the visitor entered, without converting it. Seconds are always `00`. Dates must be real calendar dates between years 0001 and 9999.
+
+Visitors see their browser's native date and time controls, so the display format follows their browser settings.
+
+## Hidden
+
+A value that the form submits but does not show to visitors. Hidden fields appear in the **Hidden fields** section below the form preview, not in the visible layout.
+
+| Option | Rule |
+| --- | --- |
+| Default value | Optional text up to 10,000 characters |
+
+Managed Formbrew forms submit the default value. A custom integration can submit its own value under the field key instead.
+
+<Warning>
+  Hidden values are visible in the page source, and anyone who submits the form can change them. Do not use them for secrets, and do not trust them for pricing, permissions, or other security decisions.
+</Warning>
+
+If a submission omits a Hidden field, Formbrew does not fill in the default value. It stores an empty string as an empty string.
+
+Drag Hidden fields in the **Hidden fields** section to change their order.
+
+## Confirm
+
+A second input that asks visitors to re-enter another field's answer, such as an email address. Use **Field to confirm** to choose the target field.
+
+- You can confirm a Text, Email, Number, Phone, Website, or Date / Time field.
+- The confirmation must match the target answer. Formbrew compares the values after it normalizes the target answer, for example after trimming an email address.
+- The confirmation follows the target's required setting. When the target is optional, visitors can leave both inputs empty.
+- Formbrew never stores the confirmation answer, shows it in submissions, or sends it to webhooks.
+
+When you add a Confirm field, Formbrew targets the selected field if it supports confirmation. Otherwise, it targets the first field that supports confirmation.
+
+You cannot delete a field, or change it to a type that does not support confirmation, while a Confirm field targets it. Retarget or delete the Confirm field first.
+
+## Content
+
+Rich text displayed inside the form, such as instructions, legal notes, or section introductions. Content fields do not collect an answer.
+
+The **Content** editor supports normal text, level 2 and level 3 headings, bold, italic, bulleted lists, numbered lists, links, undo, and redo. You cannot nest lists.
+
+| Limit | Value |
+| --- | --- |
+| Text length | 10,000 characters |
+| Link addresses | `http://`, `https://`, or `mailto:` addresses up to 2,048 characters |
+
+The label of a Content field identifies it in the builder. HTML, images, embeds, and custom styles are not supported. Formbrew rejects a submission that sends a value for a Content field.
 
 ## Choice options
 
-Checkbox and radio groups always contain at least one option. Select **Add option** to append an option and **Remove** to delete one; the final option cannot be removed.
+**Checkboxes**, **Radios**, and **Select** fields always contain at least one option. New choice fields start with two options. Select **Add option** to append an option and **Remove** to delete one. You cannot remove the final option.
 
-Formbrew creates a stable submitted value when an option is added. Renaming the visible option label does not change that submitted value. Removed values are reserved and are not reused later.
+Formbrew creates a stable submitted value when you add an option. Renaming the visible option label does not change that submitted value. Formbrew reserves removed values and does not reuse them later.
 
 <Note>
-  Stable option values protect existing integrations when display labels change. The current dashboard does not display or let you edit those generated values.
+  Stable option values protect existing integrations when display labels change. The dashboard does not display or let you edit those generated values.
 </Note>
+
+## Frontend compatibility
+
+Date / Time, Hidden, Confirm, and Content fields, multi-line Text, and the Number decimal and negative-value settings need version `0.4.0` or later of `@formbrew/js`, `@formbrew/react`, or `@formbrew/embed`.
+
+<Warning>
+  Version `0.3.0` and earlier of these packages reject the entire form when it uses any of these settings or field types. Upgrade your integration before you add them to a published form.
+</Warning>
 
 ## Unsupported fields
 
-The current builder does not include textarea, select, date, time, address, file upload, hidden, content, payment, multi-step, or conditional fields. File uploads sent to the public API are rejected.
+Formbrew does not currently support address, file upload, payment, multi-step, or conditional fields. The Public API rejects file uploads.

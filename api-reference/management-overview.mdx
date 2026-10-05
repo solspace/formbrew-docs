@@ -1,38 +1,68 @@
 ---
 title: "Management API overview"
-description: "Understand the internal API used by the Formbrew dashboard."
+description: "Understand the API the Formbrew dashboard uses to manage workspaces and forms."
 ---
 
-# Management API overview
-
-The Management API manages workspace resources used by the Formbrew dashboard.
+The Management API manages workspace resources such as forms, fields, public form tokens, submissions, and webhooks. The Formbrew dashboard uses it for every management action, and your own code or coding agent can use part of it with a management token.
 
 ```text
-https://api.staging.formbrew.com/management/v1
+https://api.formbrew.com/management/v1
 ```
 
-<Warning>
-  The Management API is not currently available for customer-built integrations. Formbrew does not issue management API tokens or expose an external OAuth connection flow yet. This reference documents the resource contract in preparation for future access.
-</Warning>
+<Note>
+  Your own code can call the form, field, allowed origin, publication, public form token, email settings, and submission operations with a [management token](/agents/managed-mode). Each token belongs to one workspace and holds only the permissions a workspace owner or administrator grants. Every other operation accepts only sign-in tokens issued to the Formbrew dashboard. Formbrew doesn't offer OAuth apps.
+</Note>
 
-Authentication setup and integration examples are intentionally out of scope for now. The current dashboard uses authenticated workspace-scoped requests internally.
+## What you can do today
 
-The [Management API OpenAPI document](https://api.staging.formbrew.com/management/v1/openapi.json) is public and does not require management credentials.
+- Manage forms, public form tokens, submissions, and webhooks in the [dashboard](https://formbrew.com).
+- Create, edit, and publish forms from your own code or a coding agent with a [management token](/agents/managed-mode), over [HTTP](/agents/http-recipes) or [MCP](/agents/mcp).
+- Fetch form definitions and create submissions with the [Public API](/api-reference/public-overview).
+- Receive new submissions on your server with [webhooks](/webhooks/overview).
+- Download the [Management API OpenAPI document](https://api.formbrew.com/management/v1/openapi.json) without credentials to review the resource contract.
+
+The Management API and the Public API are separate. Public form tokens don't work here, and Public API paths return `404` under this base URL.
+
+## Authentication
+
+Except for the health checks, the OpenAPI document, and an internal billing callback, every operation requires an `Authorization: Bearer` header with one of these credentials:
+
+- An access token from a signed-in dashboard session. Dashboard sign-in tokens aren't a supported credential for integrations.
+- A management token, which starts with `fbm_`. It works only on the operations listed in the note above, within its permissions. Other operations return `403` with `ManagementTokenOperationNotAllowed`. See [Managed mode](/agents/managed-mode#authenticate-requests) for permissions and errors.
+
+A missing or invalid token returns `401`. Browsers can call the API only from the dashboard.
+
+## Workspace selection
+
+Workspace-scoped operations require an `X-Workspace-ID` header that contains the ID of a workspace you belong to. The API doesn't fall back to a default workspace. Account-level operations, such as getting your identity or listing your workspaces, don't use the header.
+
+| Condition | Result |
+| --- | --- |
+| The header is missing | `400` with `WorkspaceContextRequired` |
+| The workspace doesn't exist or you aren't a member | `404` with `WorkspaceNotFound` |
+| The workspace is pending deletion or your membership is suspended | `403` |
+| Your workspace role doesn't allow the operation | `403` with `Forbidden` |
+
+A management token works only in the workspace that issued it, so `X-Workspace-ID` must name that workspace; otherwise the request returns `403` with `ManagementTokenWorkspaceMismatch`.
+
+Your role determines which operations succeed. For example, viewers can read forms and submissions but can't change them or read public form tokens.
+
+Formbrew looks up resources within the selected workspace. Resources in other workspaces, archived forms, and deleted webhook endpoints return `404`, so responses don't reveal whether a resource exists elsewhere.
 
 ## Resource groups
 
 <CardGroup cols={2}>
-  <Card title="Identity and health" icon="heart-pulse" href="/api-reference/management-resources#identity-and-health">
-    Inspect service status and the current workspace context.
-  </Card>
   <Card title="Forms and fields" icon="rectangle-list" href="/api-reference/management-resources#forms">
-    Create forms and maintain their definitions and layouts.
+    Create forms and maintain their definitions, layouts, and allowed origins.
   </Card>
-  <Card title="Tokens and submissions" icon="inbox" href="/api-reference/management-resources#form-tokens">
-    Manage public form access and submission workflow state.
+  <Card title="Tokens and submissions" icon="inbox" href="/api-reference/management-resources#public-form-tokens">
+    Manage public form tokens and submission workflow state.
   </Card>
-  <Card title="Usage and webhooks" icon="webhook" href="/api-reference/management-resources#webhooks">
-    Read monthly usage and manage outbound destinations.
+  <Card title="Webhooks and email" icon="webhook" href="/api-reference/management-resources#webhooks">
+    Manage outbound webhook endpoints and form email settings.
+  </Card>
+  <Card title="Usage and workspace" icon="chart-line" href="/api-reference/management-resources#usage-and-plan">
+    Read monthly usage and plan limits, and review workspace administration operations.
   </Card>
 </CardGroup>
 
@@ -40,7 +70,7 @@ The [Management API OpenAPI document](https://api.staging.formbrew.com/managemen
 
 ### Successful responses
 
-Resources are wrapped in `data`:
+Successful responses with a body wrap the result in `data`. List operations return an array in `data`.
 
 ```json
 {
@@ -51,32 +81,34 @@ Resources are wrapped in `data`:
 }
 ```
 
-List operations use the same envelope with an array in `data`. Create operations generally return `201`; reads, updates, archive operations, revocations, and secret rotation return `200`.
+Create operations return `201`. Most other operations return `200`; a few return `202` or `204`.
 
 ### Errors
 
+Errors use the same envelope as the Public API:
+
 ```json
 {
-  "error": "ValidationError",
-  "message": "A human-readable explanation.",
-  "details": []
+  "error": "NotFound",
+  "message": "Form not found.",
+  "requestId": "3ce11e0f-a68a-4130-8d31-b925903efa1f"
 }
 ```
 
-`details` is optional. Request bodies are strict JSON objects, so unknown properties are generally rejected.
-
-### Workspace scope
-
-Authenticated identity resolves to a workspace before resource handlers run. Forms and related resources are looked up within that workspace. Missing, archived, deleted, or out-of-workspace resources generally return `404` rather than revealing whether they exist elsewhere.
+`details` is optional and lists the failing properties for request-schema failures. Request bodies are strict JSON objects, so unknown properties return `400` with `ValidationError`.
 
 ### Pagination
 
-Forms, form tokens, submissions, and webhook endpoint lists are currently unpaginated. Webhook deliveries accept `limit` from 1 to 50 and default to 20.
+List operations return complete, unpaginated arrays, with these exceptions:
+
+- The webhook delivery list returns the most recent deliveries, up to `limit` (1 to 50, default 20).
+- The submission list accepts `limit` (1 to 100) and `before`, the last submission ID from the previous page. Management tokens always receive at most 100 submissions per request.
+- The workspace activity list accepts `limit` (1 to 100, default 50) and `before`.
+
+### Idempotency
+
+Creating a form, a field, or a public form token accepts an `Idempotency-Key` header. A retry with the same key and request within 24 hours returns the resource created the first time, with an `Idempotency-Replayed: true` header, instead of creating another. See [Retries and idempotency](/agents/managed-mode#retries-and-idempotency).
 
 ### Cache control
 
-Form-token, webhook-endpoint, secret-rotation, and webhook-delivery responses use `Cache-Control: no-store` because they contain sensitive or operational values.
-
-## OpenAPI reference
-
-Endpoint pages in this section are generated from the [published staging OpenAPI document](https://api.staging.formbrew.com/management/v1/openapi.json). The specification describes current request and response schemas; access availability may change when management credentials are introduced.
+Responses that contain secrets or sensitive account data, such as public form tokens, webhook endpoints and deliveries, email settings, plan details, and billing, use `Cache-Control: no-store`.

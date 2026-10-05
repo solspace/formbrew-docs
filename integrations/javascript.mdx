@@ -3,9 +3,14 @@ title: "JavaScript SDK"
 description: "Use the typed Formbrew client and managed DOM renderer."
 ---
 
-# JavaScript SDK
+`@formbrew/js` includes a typed headless client, a managed DOM renderer, framework-neutral form helpers, and optional styles. Use it for vanilla JavaScript and for frameworks without a dedicated Formbrew package, such as Vue, Svelte, Angular, and Astro.
 
-`@formbrew/js` includes a typed headless client, a managed DOM renderer, framework-neutral form helpers, and optional styles.
+| Entry | Contents |
+| --- | --- |
+| `@formbrew/js` | `createFormbrewClient`, `FormbrewError`, `isFormbrewError`, field type guards, and types |
+| `@formbrew/js/dom` | `mountFormbrewForm` and its controller type |
+| `@formbrew/js/form` | Helpers for custom forms, such as `collectFormbrewSubmission` |
+| `@formbrew/js/styles.css` | Optional default styles |
 
 ## Install
 
@@ -27,23 +32,23 @@ bun add @formbrew/js
 ```
 </CodeGroup>
 
+The current version is `0.4.0`. Server-side use requires Node.js 20 or later.
+
 ## Managed DOM form
 
 ```html
 <div id="contact-form"></div>
 ```
 
+{/* docs-check: typecheck */}
 ```ts
 import { createFormbrewClient } from "@formbrew/js";
 import { mountFormbrewForm } from "@formbrew/js/dom";
 import "@formbrew/js/styles.css";
 
-const client = createFormbrewClient({
-  baseUrl: "https://api.staging.formbrew.com/v1",
-  token: "YOUR_PUBLIC_TOKEN",
-});
+const client = createFormbrewClient({ token: "YOUR_PUBLIC_FORM_TOKEN" });
 
-const controller = await mountFormbrewForm("#contact-form", {
+mountFormbrewForm("#contact-form", {
   client,
   metadata: () => ({ source: window.location.pathname }),
   onSuccess(result) {
@@ -52,59 +57,115 @@ const controller = await mountFormbrewForm("#contact-form", {
   onError(error) {
     console.error(error.code, error.message);
   },
-});
+})
+  .then((controller) => {
+    console.log("Loaded", controller.definition.name);
+  })
+  .catch((error: unknown) => {
+    console.error("The form could not be loaded.", error);
+  });
 ```
 
 The renderer fetches the definition, creates semantic native controls, adds the honeypot, applies supported browser validation, prevents duplicate in-flight submissions, resets after success, and displays status messages.
 
-Call `controller.reset()` to clear the form or `controller.destroy()` before removing the host view.
+| Option | Purpose |
+| --- | --- |
+| `client` | Required client created with `createFormbrewClient()`. |
+| `definition` | Optional definition you already fetched. The renderer validates it and skips its own fetch. |
+| `metadata` | Metadata object, or a function called at submission time. |
+| `onSuccess` | Called with the submission result and the controller. |
+| `onError` | Called with a `FormbrewError` when a submission fails. |
+| `signal` | `AbortSignal` that cancels loading or destroys the mounted form. |
+
+`mountFormbrewForm()` returns a promise for a controller with `definition`, `form`, `target`, `reset()`, and `destroy()`. If the definition cannot load, the promise rejects with a `FormbrewError` and the target shows an error message.
+
+The stylesheet is optional, but it also hides the honeypot through the `.fb-honeypot` class. If you do not import it, add your own rule that keeps `.fb-honeypot` visually hidden.
+
+## Framework lifecycle
+
+The DOM renderer needs a browser DOM. Mount it after your framework has created the target element, and clean it up when your framework removes the view. Aborting the signal you pass to `mountFormbrewForm()` cancels a pending load or destroys a mounted form:
+
+{/* docs-check: typecheck */}
+```ts
+import { createFormbrewClient } from "@formbrew/js";
+import { mountFormbrewForm } from "@formbrew/js/dom";
+
+const client = createFormbrewClient({ token: "YOUR_PUBLIC_FORM_TOKEN" });
+
+/** Mounts the form and returns a cleanup function for your framework's unmount hook. */
+export function mountContactForm(target: HTMLElement): () => void {
+  const abortController = new AbortController();
+
+  mountFormbrewForm(target, { client, signal: abortController.signal }).catch((error: unknown) => {
+    if (!abortController.signal.aborted) {
+      console.error("The form could not be loaded.", error);
+    }
+  });
+
+  return () => abortController.abort();
+}
+```
+
+| Framework | Mount in | Clean up in |
+| --- | --- | --- |
+| Vue and Nuxt | `onMounted` | `onBeforeUnmount` |
+| Svelte and SvelteKit | `onMount` | The function returned from `onMount` |
+| Angular | `ngAfterViewInit` | `ngOnDestroy` |
+| Astro | A client-side `<script>` in the component | Not needed for full page loads |
+
+You can import all `@formbrew/js` entries during server rendering, but call `mountFormbrewForm()` only in the browser. In server-rendered frameworks, render an empty target element on the server and mount the form on the client.
 
 ## Headless client
 
 Use the client alone when your application renders fields itself:
 
+{/* docs-check: typecheck */}
 ```ts
 import { createFormbrewClient } from "@formbrew/js";
 
-const client = createFormbrewClient({
-  baseUrl: "https://api.staging.formbrew.com/v1",
-  token: "YOUR_PUBLIC_TOKEN",
-});
-const definition = await client.fetchForm();
+const client = createFormbrewClient({ token: "YOUR_PUBLIC_FORM_TOKEN" });
 
-console.log(definition.fields);
+export async function submitContactRequest(email: string): Promise<string> {
+  const definition = await client.fetchForm();
+  console.log(definition.fields.map((field) => field.key));
 
-const result = await client.submit(
-  {
-    email: "hello@example.com",
-    interests: ["product", "pricing"],
-  },
-  {
-    metadata: { source: "contact-page" },
-  },
-);
+  const result = await client.submit(
+    {
+      email,
+      interests: ["product", "pricing"],
+    },
+    {
+      metadata: { source: "contact-page" },
+    },
+  );
 
-console.log(result.message);
+  return result.message;
+}
 ```
+
+`submit()` takes field values directly and creates the `{ values, metadata }` request envelope for you. It does not fetch the definition first.
 
 ## Client configuration
 
 | Option | Purpose |
 | --- | --- |
 | `token` | Required public form token. |
-| `baseUrl` | API base URL. Use `https://api.staging.formbrew.com/v1` during staging. |
-| `origin` | Explicit website origin for Node, Bun, SSR, or other non-browser use. |
+| `baseUrl` | Public API base URL. Defaults to `https://api.formbrew.com/v1`. |
+| `origin` | Explicit website origin for Node.js, Bun, server rendering, or other non-browser use. |
 | `fetch` | Custom Fetch-compatible implementation. |
 
-Browser requests receive `Origin` automatically. Non-browser requests must supply an origin that is configured on the form:
+Browsers send `Origin` automatically. Non-browser requests must supply one of the form's allowed origins:
 
 ```ts
 const client = createFormbrewClient({
-  baseUrl: "https://api.staging.formbrew.com/v1",
-  token: process.env.FORMBREW_TOKEN!,
+  token: "YOUR_PUBLIC_FORM_TOKEN",
   origin: "https://www.example.com",
 });
 ```
+
+Do not set `origin` in browser code. Browsers do not let JavaScript override the `Origin` header.
+
+Server-side requests from one server share one client IP address, so they count against the same per-IP [rate limits](/integrations/submissions-and-errors#request-limits). Cache definitions you fetch on a server instead of fetching on every page view.
 
 ## Cancellation
 
@@ -119,20 +180,39 @@ abortController.abort();
 await request;
 ```
 
-Native `AbortError` exceptions are preserved.
+The client preserves native `AbortError` exceptions, so `await request` rejects with an `AbortError` rather than a `FormbrewError`.
 
 ## Errors
 
+{/* docs-check: typecheck */}
 ```ts
-import { FormbrewError } from "@formbrew/js";
+import { createFormbrewClient, FormbrewError } from "@formbrew/js";
 
-try {
-  await client.submit({ email: "not-an-email" });
-} catch (error) {
-  if (error instanceof FormbrewError) {
-    console.error(error.code, error.status, error.details);
+const client = createFormbrewClient({ token: "YOUR_PUBLIC_FORM_TOKEN" });
+
+export async function submitEmail(email: string): Promise<void> {
+  try {
+    await client.submit({ email });
+  } catch (error) {
+    if (error instanceof FormbrewError) {
+      console.error(error.code, error.status, error.message);
+      return;
+    }
+
+    throw error;
   }
 }
 ```
 
-`FormbrewError` normalizes API errors, unsuccessful HTTP responses, network failures, malformed responses, and configuration failures.
+`FormbrewError` normalizes API errors, unsuccessful HTTP responses, network failures, malformed responses, and configuration failures:
+
+| `code` | `status` | Meaning |
+| --- | --- | --- |
+| API error code, such as `ValidationError` or `Forbidden` | HTTP status | The API returned an error response. See [error codes](/integrations/submissions-and-errors#error-codes). |
+| `HttpError` | HTTP status | The response failed without a Formbrew error body. |
+| `NetworkError` | `null` | The request did not reach Formbrew. |
+| `InvalidResponse` | HTTP status | The response was not a valid Formbrew payload, for example a definition that this SDK version cannot read. |
+| `ConfigurationError` | `null` | The token, base URL, origin, values, metadata, target element, or supplied definition is invalid. |
+| `RendererError` | `null` | The DOM renderer failed unexpectedly. |
+
+`error.details` is present only when the API includes `details`, such as for request validation errors.

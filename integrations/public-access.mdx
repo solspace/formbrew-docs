@@ -1,50 +1,87 @@
 ---
 title: "Tokens and origins"
-description: "Understand the public token and allowed-origin checks used by frontend integrations."
+description: "Understand the public form token and allowed-origin checks used by frontend integrations."
 ---
 
-# Tokens and origins
+Formbrew checks every definition request and submission against the public form token, the form status, and the request origin. Configure both in **Public access** for the form.
 
-Every definition request and submission is checked against the token, form status, and request origin.
+## Public form tokens
 
-## Public tokens
-
-A public token identifies one form and is part of the public URL:
+A public form token identifies one form and is part of the public URL:
 
 ```text
-GET  https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN
-POST https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN/submit
+GET  https://api.formbrew.com/v1/forms/YOUR_PUBLIC_FORM_TOKEN
+POST https://api.formbrew.com/v1/forms/YOUR_PUBLIC_FORM_TOKEN/submit
 ```
 
-Tokens are publishable and can appear in source HTML, browser bundles, and network requests. Do not treat them like account passwords. Revoke a token to disable integrations using that specific value.
+Tokens start with `fbf_`. They are publishable, not secret: they appear in page source, browser bundles, and network requests, and you can copy them again from **Public access** or the integration guide at any time. Do not treat a public form token as a password, and never use it to protect private data.
+
+| Token behavior | Details |
+| --- | --- |
+| Several tokens per form | Use separate tokens to tell integrations apart. The token list shows when each token was last used. |
+| Expiration | Tokens generated in the dashboard do not expire. Tokens created through the Management API can have an expiration time. |
+| Revocation | Takes effect immediately. Requests with a revoked token return `401`. |
+| Unknown token | Returns `404`. |
+
+### Rotate a token
+
+There is no rotate action. To replace a token without downtime:
+
+1. Generate a new token in **Public access**.
+2. Deploy your integration with the new token.
+3. Confirm the new token is in use, then revoke the old token.
+
+Revoke a token when you stop using an integration or see unwanted traffic from it.
 
 ## Allowed origins
 
-An origin is the combination of scheme, hostname, and non-default port:
+An origin is the combination of scheme, hostname, and port:
 
 ```text
 https://www.example.com
 http://localhost:5173
 ```
 
-The API checks the browser's `Origin` header and falls back to the origin part of `Referer` only when `Origin` is absent. The exact normalized origin must appear in the form's allowed-origin list.
+Formbrew compares origins exactly after normalization:
 
-Allowed origins are an abuse-control boundary, not authentication. A non-browser HTTP client can set an origin header itself.
+- Hostnames are case-insensitive, and Formbrew removes default ports. It stores `https://example.com:443` as `https://example.com`.
+- Formbrew saves an entry without a scheme as HTTPS.
+- An entry cannot contain a path, query, or fragment.
+- `https://example.com`, `https://www.example.com`, `http://example.com`, and `http://localhost:3000` are four different origins.
+- Wildcards are not supported. Add each origin separately, including preview deployments and other environments of your website.
+
+A form must have at least one allowed origin before you can publish it, and you cannot remove the last origin from a published form.
+
+## How requests are checked
+
+The API applies the same checks to `GET` definition requests and `POST` submissions, in this order:
+
+{/* docs-check: production-setting billing.quota-enforcement */}
+
+1. **Request format.** For submissions only, a malformed or oversized body returns `400` or `413` before any other check.
+2. **Token.** Unknown tokens return `404`; revoked or expired tokens return `401`.
+3. **Status.** A form that is not published returns `404`.
+4. **Origin.** An origin missing from the allowed origins returns `403`.
+5. **Rate limit.** Too many requests return `429`.
+6. **Submission checks.** For submissions only: honeypot, field validation, and plan limits.
+
+The API reads the request's `Origin` header. It falls back to the origin part of `Referer` only when `Origin` is absent. The API always rejects an `Origin` of `null`. Accepted submissions store the normalized origin.
+
+Allowed origins are an abuse-control boundary, not authentication. A non-browser HTTP client can set any `Origin` header.
 
 ## Browser requests
 
-Do not manually set `Origin` in browser JavaScript. Browsers control that forbidden header. Add the website to the dashboard and let the browser send it.
+Do not set `Origin` in browser JavaScript. Browsers control that header. Add the website to the allowed origins and let the browser send it.
 
-Formbrew's CORS layer allows public `GET`, `POST`, and `OPTIONS` requests with `Content-Type`. The form-specific allowlist is checked after CORS processing.
+The Public API answers CORS requests from any HTTP or HTTPS origin, then applies the form's allowed origins. A disallowed origin therefore receives a readable `403` JSON error instead of a CORS failure. CORS allows `GET`, `POST`, and `OPTIONS` with the `Content-Type` request header, without cookies or other credentials, and exposes the `X-Request-ID` response header.
 
 ## Server requests
 
-Set the intended configured website origin explicitly:
+Set the intended allowed website origin explicitly:
 
 ```ts
 const client = createFormbrewClient({
-  baseUrl: "https://api.staging.formbrew.com/v1",
-  token: process.env.FORMBREW_TOKEN!,
+  token: "YOUR_PUBLIC_FORM_TOKEN",
   origin: "https://www.example.com",
 });
 ```
@@ -52,7 +89,7 @@ const client = createFormbrewClient({
 With raw HTTP, send the same value in `Origin`:
 
 ```bash
-curl https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN \
+curl https://api.formbrew.com/v1/forms/YOUR_PUBLIC_FORM_TOKEN \
   --header 'Origin: https://www.example.com'
 ```
 
@@ -60,8 +97,10 @@ curl https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN \
 
 | Problem | Check |
 | --- | --- |
-| Production works but staging fails | Add the staging hostname separately |
+| Production works but a preview or second environment fails | Add that environment's origin separately |
 | Local requests fail | Add the exact localhost scheme and port |
 | `www` fails | Add both apex and `www` origins if both serve the form |
-| Request sends `Origin: null` | Serve the page over HTTP(S), not a local file or sandboxed context |
+| Request sends `Origin: null` | Serve the page over HTTP(S), not from a local file or sandboxed frame. For native HTML forms, check your `Referrer-Policy`. |
 | Server request fails | Set `origin` in the SDK or `Origin` in raw HTTP |
+
+See [troubleshooting](/integrations/troubleshooting) for more diagnosis steps.

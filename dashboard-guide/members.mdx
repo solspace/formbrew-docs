@@ -1,0 +1,123 @@
+---
+title: "Members and roles"
+description: "Invite teammates, manage roles and permissions, transfer ownership, and leave workspaces."
+---
+
+Each workspace has one owner. Other members have a role that controls what they can do. Owners and admins manage members in the **Members** section of workspace settings.
+
+To open workspace settings, open the menu with your name at the bottom of the sidebar. Then select the **Settings for** item that shows the workspace name.
+
+## Roles
+
+| Role | Description |
+| --- | --- |
+| Owner | Has full access, including ownership transfer and workspace deletion. Each workspace has exactly one owner. |
+| Admin | Manages members, workspace settings, and every form. |
+| Editor | Builds forms and works with submissions. |
+| Viewer | Reads forms and submissions. |
+
+| Action | Owner | Admin | Editor | Viewer |
+| --- | --- | --- | --- | --- |
+| View forms, submissions, webhooks, and usage | Yes | Yes | Yes | Yes |
+| Create, edit, publish, and archive forms | Yes | Yes | Yes | No |
+| Update submission status and notes | Yes | Yes | Yes | No |
+| View and manage public form tokens | Yes | Yes | Yes | No |
+| Manage webhook endpoints | Yes | Yes | Yes | No |
+| Export submissions | Yes | Yes | Yes | With permission |
+| Open **Subscriptions** | Yes | With permission | With permission | With permission |
+| Change workspace name and slug | Yes | Yes | No | No |
+| Invite, change, and remove members | Yes | Yes | No | No |
+| Transfer ownership, delete, and restore the workspace | Yes | No | No | No |
+| Leave the workspace | No | Yes | Yes | Yes |
+
+The dashboard does not hide every editing control from viewers. If a viewer tries to save a change, Formbrew rejects the change.
+
+## Additional permissions
+
+You can give any member these permissions on top of their role:
+
+- **Export submissions** lets a viewer download submissions as JSON.
+- **Manage billing** lets a member open the **Subscriptions** page. Admins do not have this permission by default.
+
+## Seats
+
+Every active member, including the owner, uses one seat. Each pending invitation reserves a seat too. The **Members** section shows how many seats are active or reserved, and the workspace's limit.
+
+{/* docs-check: production-setting billing.purchases */}
+
+<Warning>
+  New workspaces start on the Free plan, which includes one seat. The owner uses that seat, so you cannot invite members to a Free workspace. Plans with more seats are not available for purchase yet.
+</Warning>
+
+When a workspace has no free seat, inviting a member fails with **Every team seat is in use**.
+
+## Invite a member
+
+1. Open workspace settings.
+2. Under **Invite a member**, enter the person's **Email**.
+3. Choose a **Role**. The default is **Editor**.
+4. Optionally select additional permissions.
+5. Select **Send invitation**.
+
+Formbrew emails an invitation link to that address. The invitation expires after seven days.
+
+Pending invitations appear under **Pending invitations** with their expiry date.
+
+- Select **Resend** to send a new link and restart the seven days. The previous link stops working.
+- Select **Revoke** to cancel the invitation and free its seat.
+
+Neither action asks for confirmation. After an invitation expires, invite the person again.
+
+## Accept an invitation
+
+Open the invitation link and sign in with the account that uses the invited email address. You must have a verified email address. Select **Accept invitation** to join, or **Decline** to reject the invitation.
+
+If you are already signed in with a matching email address, pending invitations also appear in the workspace switcher and on the dashboard home page. Select **Accept** or **Decline** there.
+
+Accepting an invitation opens the workspace's **Forms** page. It counts toward your [workspace membership limit](/dashboard-guide/workspaces#workspace-membership-limit).
+
+<Note>
+  If you sign in with a different email address, Formbrew rejects the invitation. Log out, then open the invitation link again and sign in with the invited address.
+</Note>
+
+## Change a member's role or permissions
+
+In the **Members** section, change the member's **Role** or additional permissions. Then select **Save member**. You cannot change the owner's role.
+
+## Remove a member
+
+Select **Remove** next to the member, then select **Remove member** to confirm. The member loses access immediately. An owner or admin must invite them again before they can return. You cannot remove the owner.
+
+## Suspended members
+
+If a workspace's seat limit decreases, Formbrew suspends the most recently joined members until the active members fit. It keeps the owner active.
+
+Suspended members keep their role and permissions, but they cannot open the workspace's data. They can still leave the workspace. An owner or admin can select **Reactivate** when a seat is free.
+
+## Leave a workspace
+
+Members other than the owner can leave a workspace.
+
+1. Open the menu with your name at the bottom of the sidebar.
+2. Select the **Leave** item that shows the workspace name.
+3. Select **Leave workspace**.
+
+You lose access immediately, without a confirmation step. An owner or admin must invite you again to restore access. Leaving frees one of your workspace memberships.
+
+To leave a workspace you own, transfer ownership first.
+
+## Transfer ownership
+
+Only the owner can transfer ownership. Open workspace settings and use **Transfer ownership**.
+
+1. Under **New owner**, choose **Active member** and select a member, or choose **External verified email** and enter an email address.
+2. Under **Your access after transfer**, choose **Remain Admin**, **Remain Editor**, or **Leave workspace**.
+3. Select **Transfer now** for a member, or **Send ownership transfer** for an email address.
+
+<Warning>
+  **Transfer now** takes effect immediately and has no confirmation step.
+</Warning>
+
+A transfer to an email address sends a link that expires after seven days. The recipient must sign in with that verified email address and select **Accept ownership**. The address cannot belong to a current member. While the transfer is pending, you can select **Resend** or **Cancel transfer**. A workspace can have only one pending transfer.
+
+If you want to stay in the workspace after an email transfer, the workspace needs a free seat for the new owner. Otherwise, **Leave workspace** is the only option.

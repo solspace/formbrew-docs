@@ -3,23 +3,23 @@ title: "Plain HTML"
 description: "Submit a Formbrew form with native HTML, with optional progressive enhancement."
 ---
 
-# Plain HTML
-
-A native HTML form can submit directly to Formbrew without client-side JavaScript. Use the generated example in the dashboard because it includes your current field names and choice values.
+A native HTML form can submit directly to Formbrew without client-side JavaScript. Copy the generated example from **Integration** in the form builder because it includes your current field keys, choice values, honeypot name, and validation attributes.
 
 ## Native form
 
 ```html
-<form action="https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN/submit" method="POST">
+<form id="formbrew-form" action="https://api.formbrew.com/v1/forms/YOUR_PUBLIC_FORM_TOKEN/submit" method="POST">
   <div aria-hidden="true" style="position:absolute;left:-10000px;">
     <label>
-      Website
-      <input name="YOUR_HONEYPOT_FIELD" tabindex="-1" autocomplete="off" />
+      Leave this field blank
+      <input name="YOUR_HONEYPOT_FIELD_NAME" tabindex="-1" autocomplete="off" />
     </label>
   </div>
 
-  <label for="email">Email</label>
-  <input id="email" name="email" type="email" required />
+  <label>
+    Email
+    <input id="email" name="email" type="email" required />
+  </label>
 
   <fieldset>
     <legend>Interests</legend>
@@ -28,35 +28,56 @@ A native HTML form can submit directly to Formbrew without client-side JavaScrip
   </fieldset>
 
   <button type="submit">Submit</button>
+  <p id="form-status" aria-live="polite"></p>
 </form>
 ```
 
-The browser sends `application/x-www-form-urlencoded` by default. Repeated names, such as checkbox-group values, are normalized into arrays.
+The browser sends `application/x-www-form-urlencoded` by default. Formbrew normalizes repeated names, such as checkbox-group values, into arrays.
 
 <Warning>
-  A successful native submission navigates to the API's JSON response. There is no success redirect or hosted success page yet. Use progressive enhancement if the visitor should remain on your page.
+  A successful native submission navigates to the API's JSON response. There is no success redirect or hosted success page. Use progressive enhancement if the visitor should remain on your page.
 </Warning>
+
+## Field markup
+
+The generated markup maps each field type to a native control:
+
+| Field type | Control | Submitted value |
+| --- | --- | --- |
+| Text | `<input type="text">`, or `<textarea>` when the field is multiline | Text. Single-line fields replace line breaks with spaces. |
+| Email | `<input type="email">` | Trimmed address |
+| Number | `<input type="number">` with `step`, `min`, and `max` from the field settings | Decimal number text |
+| Phone | `<input type="tel">` | Trimmed text |
+| Website | `<input type="url">`, with an HTTPS pattern when the field requires HTTPS | Trimmed HTTP or HTTPS URL |
+| Checkbox | `<input type="checkbox" value="true">` | `true` when checked; omitted when unchecked |
+| Checkbox group | Checkboxes sharing the field key | Each option value |
+| Radio group | Radio buttons sharing the field key | One option value |
+| Select | `<select>` with an empty first option | One option value |
+| Date/Time | `<input type="date">`, `<input type="time">`, or `<input type="datetime-local">` | `YYYY-MM-DD`, `HH:MM`, or `YYYY-MM-DDTHH:MM`, without a timezone |
+| Hidden | `<input type="hidden">` at the start of the form, with the configured default value | Text |
+| Confirm | The same kind of control as its target field, with the Confirm field's own key | Must match the target value |
+| Content | Static headings, paragraphs, lists, and links | Nothing |
+
+Checkbox fields also accept `on`, `1`, and `yes` as checked values. Keep option values exactly as generated; the API rejects values that are not current options.
 
 ## Honeypot
 
-Use the `honeypotFieldName` from the form settings or public definition. The input must:
+Use the `honeypotFieldName` from the form settings or public definition. The generated name starts with an underscore, such as `_fb_ab12cd34_url`. The input must:
 
 - Be a normal text input, not `type="hidden"`.
 - Be visually hidden from human visitors.
 - Keep the generated field name.
-- Be left empty.
+- Stay empty.
 
-A bot-filled honeypot returns `400` with the generic message `Submission rejected.`
+A filled honeypot returns `400` with the generic message `Submission rejected.`
 
 ## Progressive enhancement
 
 Intercept the native submit, send `FormData`, and handle the JSON response in place:
 
 ```html
-<p id="form-status" role="status"></p>
-
 <script>
-  const form = document.querySelector("form");
+  const form = document.querySelector("#formbrew-form");
   const status = document.querySelector("#form-status");
 
   form.addEventListener("submit", async (event) => {
@@ -83,14 +104,24 @@ Intercept the native submit, send `FormData`, and handle the JSON response in pl
 </script>
 ```
 
-`FormData` uses `multipart/form-data`. Formbrew accepts text entries but rejects file uploads.
+`FormData` uses `multipart/form-data`. Formbrew accepts text entries but rejects file uploads with `400`. Error responses use a top-level `message`; see [submissions and errors](/integrations/submissions-and-errors).
 
 ## Metadata in flat forms
 
-Names beginning with `_` become metadata keys after the first underscore is removed:
+Names beginning with `_` become metadata keys without their first underscore:
 
 ```html
 <input name="_source" type="hidden" value="contact-page" />
 ```
 
 This produces metadata `{ "source": "contact-page" }`. Keep normal field keys free of a leading underscore.
+
+## Origin and Content Security Policy
+
+Native form posts send the page origin in the `Origin` header. If your site sets `Referrer-Policy: no-referrer` or `same-origin`, browsers send `Origin: null` for the native post instead, and Formbrew rejects it with `403`. Use the browser default `strict-origin-when-cross-origin`, or use progressive enhancement: `fetch()` requests always send the real origin.
+
+If your site uses a Content Security Policy:
+
+- Native submission requires `https://api.formbrew.com` in `form-action`.
+- Progressive enhancement requires `https://api.formbrew.com` in `connect-src`.
+- The generated honeypot wrapper uses an inline `style` attribute. If your policy blocks inline styles, hide the wrapper with a class in your own stylesheet instead.

@@ -3,44 +3,44 @@ title: "Public API overview"
 description: "Fetch published form definitions and submit form values."
 ---
 
-# Public API overview
-
-The Public API is the browser-safe surface used by the hosted embed, JavaScript SDK, React SDK, plain HTML forms, and custom clients.
+The Public API is the browser-safe API behind the hosted embed, the JavaScript and React SDKs, plain HTML forms, and custom clients. You don't need an API key: a public form token identifies the form, and the form's allowed origins control where you can use it.
 
 ```text
-https://api.staging.formbrew.com/v1
+https://api.formbrew.com/v1
 ```
+
+The Public API and the [Management API](/api-reference/management-overview) are separate. Each serves only its own paths, so a Management API path sent to the Public API base URL returns `404`.
 
 ## Endpoints
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/v1/health` | Check public API liveness. |
-| `GET` | `/v1/openapi.json` | Download the current Public API OpenAPI document. |
-| `GET` | `/v1/forms/{token}` | Fetch the current render-safe definition of a published form. |
+| `GET` | `/v1/health` | Check that the Public API is available. |
+| `GET` | `/v1/openapi.json` | Download the Public API OpenAPI document. |
+| `GET` | `/v1/forms/{token}` | Fetch the render-safe definition of a published form. |
 | `POST` | `/v1/forms/{token}/submit` | Validate and create a submission. |
 
-The endpoint reference in this section is generated from the [published staging OpenAPI document](https://api.staging.formbrew.com/v1/openapi.json) and contains the declared application request and response schemas. Transport-level framework errors are described separately under [Public API requests](/api-reference/public-requests#error-envelope).
+The endpoint reference in this section is based on the [Public API OpenAPI document](https://api.formbrew.com/v1/openapi.json). For origin rules, content types, errors, and rate limits, see [Public API requests](/api-reference/public-requests).
 
 ## Access model
 
-Form endpoints require:
+Both form endpoints require:
 
-- A valid, active public form token in the URL.
+- A known public form token that isn't revoked or expired.
 - A form with `PUBLISHED` status.
-- A request `Origin`, or fallback `Referer`, matching an allowed origin.
-- A request within the form's public rate limits.
+- An `Origin` header, or a `Referer` header when `Origin` is absent, that matches one of the form's allowed origins.
+- A request within the form's [rate limits](/api-reference/public-requests#rate-limits).
 
-Public tokens are publishable identifiers and can be included in frontend code. They are not management credentials.
+Public form tokens are publishable identifiers, so you can include them in frontend code. They don't grant access to the Management API. See [Tokens and origins](/integrations/public-access) for how tokens and allowed origins work together.
 
 ## Fetch a definition
 
 ```bash
-curl 'https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN' \
+curl 'https://api.formbrew.com/v1/forms/YOUR_PUBLIC_FORM_TOKEN' \
   --header 'Origin: https://www.example.com'
 ```
 
-The successful `data` object contains form display settings, `schemaVersion`, `honeypotFieldName`, and ordered field definitions. It intentionally excludes workspace details, allowed origins, token records, submission data, and internal timestamps.
+The `data` object contains the form's display settings, `schemaVersion`, `honeypotFieldName`, and ordered field definitions. It excludes workspace details, allowed origins, token records, submissions, and timestamps.
 
 ```json
 {
@@ -60,7 +60,7 @@ The successful `data` object contains form display settings, `schemaVersion`, `h
 ## Create a submission
 
 ```bash
-curl 'https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN/submit' \
+curl 'https://api.formbrew.com/v1/forms/YOUR_PUBLIC_FORM_TOKEN/submit' \
   --header 'Content-Type: application/json' \
   --header 'Origin: https://www.example.com' \
   --data '{
@@ -73,7 +73,7 @@ curl 'https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN/submit' \
   }'
 ```
 
-An accepted request returns `201`:
+An accepted request returns `201`. The `message` value is the form's success message.
 
 ```json
 {
@@ -86,8 +86,10 @@ An accepted request returns `201`:
 
 ## Side effects
 
-An accepted submission is stored, counted in workspace usage, and scheduled for every enabled webhook endpoint on the form. Webhook queue notification failures do not change an already accepted submission; workers recover pending records from the database.
+{/* docs-check: production-setting email.delivery */}
+
+Formbrew stores an accepted submission, counts it toward your workspace's monthly usage, and queues it for each active [webhook](/webhooks/overview) endpoint on the form. Delivery happens after the response, so a delivery failure never changes an accepted submission.
 
 <Note>
-  The Public API does not support idempotency keys. Repeating an accepted request creates another submission.
+  The Public API doesn't support idempotency keys. If you repeat a request that Formbrew already accepted, it creates another submission.
 </Note>

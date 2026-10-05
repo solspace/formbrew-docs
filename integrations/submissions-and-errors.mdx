@@ -3,7 +3,17 @@ title: "Submissions and errors"
 description: "Understand value shapes, metadata, successful responses, validation, and request limits."
 ---
 
-# Submissions and errors
+## Request formats
+
+The submit endpoint accepts three content types:
+
+| Content type | Typical source |
+| --- | --- |
+| `application/json` | The JavaScript and React SDKs, or your own `fetch()` call |
+| `application/x-www-form-urlencoded` | A native HTML form |
+| `multipart/form-data` | `fetch()` with `FormData` |
+
+The API rejects other content types with `415` and request bodies larger than 1 MiB with `413`. File uploads are not supported.
 
 ## JSON submission shape
 
@@ -23,7 +33,9 @@ Raw JSON requests use a required `values` envelope and optional `metadata`:
 }
 ```
 
-A direct values object such as `{ "email": "hello@example.com" }` is not valid JSON input for the public API. The JavaScript clients create the envelope automatically.
+A direct values object such as `{ "email": "hello@example.com" }` is not valid JSON input for the Public API, and the API rejects other top-level properties. The JavaScript and React SDKs create the envelope automatically.
+
+Form-encoded requests use flat names instead. Names that start with `_` become metadata keys; all other names are field keys.
 
 ## Successful response
 
@@ -32,49 +44,80 @@ An accepted submission returns `201`:
 ```json
 {
   "data": {
-    "id": "sub_123",
+    "id": "sub_contact",
     "message": "Thanks for your submission."
   }
 }
 ```
 
-The message is configured in the form settings. Managed clients reset the form and display this message by default.
+You configure the message in the form settings. Managed clients reset the form and display this message by default.
 
 ## Error response
 
-Contract errors use this shape:
+Errors use this shape:
 
 ```json
 {
   "error": "ValidationError",
   "message": "Email must be a valid email address.",
-  "details": []
+  "requestId": "8b4f8f52-3a1e-4d2c-9a43-7f1c2e6d9b10"
 }
 ```
 
-`details` is optional. Always use `response.ok` or the HTTP status before treating a parsed payload as success.
+- `error` is a machine-readable code.
+- `message` is a human-readable description. Field validation messages start with the field label.
+- `requestId` matches the `X-Request-ID` response header. Include it when you report a problem.
+- `details` appears only for request-shape errors, such as a missing `values` object, and contains a list of issues.
+
+Field validation stops at the first failing field, so `message` describes one problem at a time. Always check `response.ok` or the HTTP status before treating a parsed payload as success.
+
+## Error codes
+
+{/* docs-check: production-setting billing.quota-enforcement */}
+
+| Status | `error` | Cause |
+| --- | --- | --- |
+| `400` | `ValidationError` | Malformed body, unknown field key, failed field rule, filled honeypot (`Submission rejected.`), or file upload |
+| `400` | `FST_ERR_CTP_INVALID_JSON_BODY` | The body is not valid JSON |
+| `401` | `Unauthorized` | The public form token is revoked or expired |
+| `402` | `PLAN_LIMIT_REACHED` | The workspace cannot accept more submissions on its current plan. Submissions only. |
+| `403` | `Forbidden` | The request origin is not an allowed origin for the form |
+| `404` | `NotFound` | The token is unknown, or the form is not published |
+| `409` | `SchemaVersionConflict` | The form changed while the submission was being processed. Submissions only. Reload the definition and try again. |
+| `413` | `FST_ERR_CTP_BODY_TOO_LARGE` | The body is larger than 1 MiB |
+| `415` | `FST_ERR_CTP_INVALID_MEDIA_TYPE` | The content type is not supported |
+| `429` | `RateLimitExceeded` | A request limit was exceeded |
+| `500` | `InternalServerError` | An unexpected server error occurred |
+| `503` | `RateLimitUnavailable` | Rate limiting is temporarily unavailable, so the request was not processed |
+
+See [troubleshooting](/integrations/troubleshooting) for how to diagnose each case.
 
 ## Field normalization
 
-- Unknown field keys are rejected.
-- Required values cannot be omitted.
+- The API rejects unknown field keys.
+- Submissions must include every required value.
 - Optional checkboxes default to `false`.
 - Optional checkbox groups default to `[]`.
-- Other empty optional values are omitted.
-- Email, phone, and website values are trimmed.
-- Text values preserve their submitted content.
-- Choice values must match currently active options.
+- The API omits other empty optional values.
+- The API trims email, phone, website, and date/time values.
+- Single-line Text values replace line breaks with spaces. Multiline Text values keep line breaks.
+- Number values can be JSON numbers or decimal strings. The API rejects values with more decimal places than allowed instead of rounding them.
+- The API stores Date/Time values without a timezone and normalizes seconds to `:00`.
+- The API stores Hidden values as submitted, including empty strings. It omits a missing Hidden value and does not substitute the default.
+- Confirm values must match their target. The API does not store them.
+- Content fields do not accept values.
+- Choice values must match current options.
 - File uploads are not supported.
 
 ## Metadata
 
-Metadata stores integration context separately from form answers. Useful values include page path, campaign, locale, and application version.
+Metadata stores integration context separately from form answers. Useful values include page path, campaign, locale, and application version. Metadata must be a JSON object.
 
-Do not place secrets, authentication credentials, payment data, or other values you would not want stored with a submission in metadata.
+Do not place secrets, authentication credentials, payment data, or other values you would not want stored with a submission in metadata. Metadata and Hidden values come from the browser, so treat them as untrusted input.
 
 ## Duplicate submissions
 
-The API does not currently support idempotency keys or server-side deduplication. Repeating a successful request creates another submission. Managed clients prevent a second submission while one request is in flight, but your custom UI should also disable duplicate submit actions.
+The API does not support idempotency keys or server-side deduplication. Repeating a successful request creates another submission. Managed clients prevent a second submission while one request is in flight, but your custom UI should also disable duplicate submit actions.
 
 ## Request limits
 
@@ -89,4 +132,6 @@ Public submissions:
 - 100 per hour per form and client IP.
 - 1,000 per hour per form.
 
-A limit violation returns `429`. Responses do not currently include rate-limit or `Retry-After` headers, so avoid automatic tight retry loops.
+Limits use fixed time windows. A limit violation returns `429`. Responses do not include rate-limit or `Retry-After` headers, so avoid automatic tight retry loops.
+
+The API rejects requests with a bad token, an unpublished form, or a disallowed origin before it applies rate limits. Requests made from your server all share the server's IP address.

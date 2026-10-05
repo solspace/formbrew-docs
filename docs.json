@@ -10,7 +10,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Dashboard",
+        "tab": "Using Formbrew",
         "icon": "browser",
         "groups": [
           {
@@ -30,14 +30,22 @@
             "pages": [
               "dashboard-guide/public-access",
               "dashboard-guide/submissions",
-              "dashboard-guide/webhooks",
+              "dashboard-guide/webhooks"
+            ]
+          },
+          {
+            "group": "Manage your workspace",
+            "pages": [
+              "dashboard-guide/workspaces",
+              "dashboard-guide/members",
+              "dashboard-guide/agent-access",
               "dashboard-guide/usage"
             ]
           }
         ]
       },
       {
-        "tab": "Frontend",
+        "tab": "Integrating Formbrew",
         "icon": "code",
         "groups": [
           {
@@ -59,49 +67,57 @@
             "pages": ["integrations/public-access", "integrations/submissions-and-errors"]
           },
           {
+            "group": "Coding agents",
+            "pages": [
+              "agents",
+              "agents/managed-mode",
+              "agents/http-recipes",
+              "agents/mcp",
+              "agents/repository-guidance"
+            ]
+          },
+          {
             "group": "Server integrations",
             "pages": ["webhooks/overview", "webhooks/verify-signatures"]
-          }
-        ]
-      },
-      {
-        "tab": "Public API",
-        "icon": "brackets-curly",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": ["api-reference/public-overview", "api-reference/public-requests"]
           },
           {
-            "group": "Endpoints",
-            "openapi": {
-              "source": "https://api.staging.formbrew.com/v1/openapi.json",
-              "directory": "api-reference/public"
-            }
-          }
-        ]
-      },
-      {
-        "tab": "Management API",
-        "icon": "sliders",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": ["api-reference/management-overview", "api-reference/management-resources"]
+            "group": "Troubleshooting",
+            "pages": ["integrations/troubleshooting"]
           },
           {
-            "group": "Endpoints",
-            "openapi": {
-              "source": "https://api.staging.formbrew.com/management/v1/openapi.json",
-              "directory": "api-reference/management"
-            }
+            "group": "Public API",
+            "pages": [
+              "api-reference/public-overview",
+              "api-reference/public-requests",
+              {
+                "group": "Public API endpoints",
+                "openapi": {
+                  "source": "api-reference/openapi/public-api.json",
+                  "directory": "api-reference/public"
+                }
+              }
+            ]
+          },
+          {
+            "group": "Management API",
+            "pages": [
+              "api-reference/management-overview",
+              "api-reference/management-resources",
+              {
+                "group": "Management API endpoints",
+                "openapi": {
+                  "source": "api-reference/openapi/management-api.json",
+                  "directory": "api-reference/management"
+                }
+              }
+            ]
           }
         ]
       }
     ]
   },
   "contextual": {
-    "options": ["copy", "download-spec"]
+    "options": ["copy", "view", "download-spec"]
   },
   "navbar": {
     "primary": {
