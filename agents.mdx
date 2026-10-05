@@ -1,0 +1,64 @@
+---
+title: "Formbrew for coding agents"
+description: "Start here if you are an AI coding agent adding a Formbrew form to a website repository."
+---
+
+This page is the entry point for AI coding agents working in a website repository. It links to the canonical pages that people use, so follow those pages for details.
+
+<Note>
+  Every page is also available as Markdown: add `.md` to its URL, or request it with an `Accept: text/markdown` header. The [`llms.txt`](https://docs.formbrew.com/llms.txt) index lists every page.
+</Note>
+
+## What you can do
+
+Agents work in one of two modes:
+
+- **Integration-only mode** is the default. You integrate an existing Formbrew form into the user's website by using its public form token. The user creates and changes forms, allowed origins, and public form tokens in the [Formbrew dashboard](https://formbrew.com).
+- **Managed mode** applies when the user gives you a management token. You can also create, edit, and publish forms, set allowed origins, and create public form tokens, within the permissions the token grants and only after the user approves each change. Follow [Managed mode](/agents/managed-mode), and [connect through MCP](/agents/mcp) if your client supports remote MCP servers.
+
+## Before you edit code
+
+Confirm these details with the user:
+
+1. The public form token. It starts with `fbf_`.
+2. The page or component that should render the form.
+3. Every website origin that will load the form, such as `https://www.example.com` and your local development URL.
+
+If the form does not exist yet, give the user the steps in the [dashboard quickstart](/dashboard-guide/getting-started): the user must add each allowed origin, create a public form token, and publish the form. In managed mode, propose the form instead and create it after the user approves. Do not guess production domains.
+
+## Choose the integration
+
+| Project | Use |
+| --- | --- |
+| React, including Next.js and other React frameworks | [`@formbrew/react`](/integrations/react) |
+| Any other framework or plain JavaScript | [`@formbrew/js`](/integrations/javascript) or the [hosted embed](/integrations/embed) |
+| Sites without a build step | The [hosted embed](/integrations/embed) or [plain HTML](/integrations/html) |
+| A custom form UI | [Custom rendering](/integrations/custom-rendering) |
+
+There is no Vue package. Vue, Svelte, and other projects use `@formbrew/js` or the hosted embed.
+
+Follow the repository's existing conventions for components, styling, and configuration. Respect the framework's server-rendering and client boundaries, and update the site's Content Security Policy when it has one. The [integrations overview](/integrations/overview) covers these requirements.
+
+## Handle credentials safely
+
+- A public form token is a publishable identifier, not a secret. It can appear in browser code.
+- Never put any other Formbrew credential, such as a management token or a webhook signing secret, in frontend code, browser-exposed environment variables, committed files, or URLs.
+- Never ask the user to paste a secret into the conversation. Tell them where to store it instead.
+
+## Check your work honestly
+
+Do not submit test data. Submissions count toward usage, appear in the user's dashboard, and can trigger webhooks.
+
+1. Run the website's own checks when the repository has them, such as its build, typecheck, linter, and tests.
+2. [Check the published definition with curl](/integrations/troubleshooting#check-the-definition-with-curl) by using an allowed origin, or with the MCP tool `check_public_definition`. If the site uses the hosted embed, also check that its script URL returns `200`.
+3. Report every check you ran and every check you did not run. A curl request does not prove that the form renders in a browser, that the Content Security Policy allows it, or that submissions work.
+
+Ask the user to open the page in a browser and send a real submission when they are ready.
+
+## Webhooks
+
+Webhook setup is manual. You can write a receiver endpoint in the user's server code by following [Receive webhooks](/webhooks/overview) and [Verify webhook signatures](/webhooks/verify-signatures). The user creates the webhook in the dashboard and stores its signing secret in their secret manager.
+
+## Add guidance to the repository
+
+To give future agent sessions the same rules, add the [repository guidance](/agents/repository-guidance) to the project's agent instructions file.

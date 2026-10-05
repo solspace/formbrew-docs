@@ -1,94 +1,144 @@
 ---
 title: "Management API resources"
-description: "Catalog of Management API endpoints and their behavior."
+description: "Catalog of Management API resources and their behavior."
 ---
 
-# Management API resources
+This page summarizes the Management API resources. For complete request and response schemas, see the endpoint pages in this section or the [Management API OpenAPI document](https://api.formbrew.com/management/v1/openapi.json).
 
-This page summarizes the Management API operations. Use the generated endpoint pages for complete property schemas and response definitions.
+<Note>
+  The dashboard can call every operation here, subject to your role. [Management tokens](/agents/managed-mode) can call the form, field, allowed origin, publication, public form token, email settings, and submission operations, except viewing and restoring trash and exporting, within their permissions. See [Management API overview](/api-reference/management-overview#authentication).
+</Note>
 
-## Identity and health
+Paths are relative to `https://api.formbrew.com/management/v1`. Unless noted, operations require the `X-Workspace-ID` header.
+
+## Health and identity
 
 | Method | Path | Behavior |
 | --- | --- | --- |
-| `GET` | `/management/v1/health` | Returns Management API liveness. |
-| `GET` | `/management/v1/ready` | Checks database and Redis readiness; returns `503` when unavailable. |
-| `GET` | `/management/v1/openapi.json` | Downloads the current Management API OpenAPI document. |
-| `GET` | `/management/v1/me` | Returns the current user and workspace membership. |
+| `GET` | `/health` | Reports that the Management API is available. No authentication. |
+| `GET` | `/ready` | Reports whether the service can handle requests; returns `503` when it can't. No authentication. |
+| `GET` | `/openapi.json` | Downloads the Management API OpenAPI document. No authentication. |
+| `GET` | `/me` | Returns your user ID, email address, and name. |
+| `GET` | `/workspaces` | Lists the workspaces you belong to, with your role and membership status. |
 
-Health and readiness are service probes. The current identity response includes user ID, external identity ID, optional profile values, workspace ID and name, and the membership role.
+`/me` and `/workspaces` are account-level operations and don't use `X-Workspace-ID`. Use a workspace `id` from `/workspaces` as the `X-Workspace-ID` value.
 
 ## Forms
 
 | Method | Path | Behavior |
 | --- | --- | --- |
-| `GET` | `/management/v1/forms` | Lists non-archived forms, newest first, with fields embedded. |
-| `POST` | `/management/v1/forms` | Creates a draft form and generated honeypot. |
-| `GET` | `/management/v1/forms/{formId}` | Gets one non-archived form and its fields. |
-| `PATCH` | `/management/v1/forms/{formId}` | Updates form metadata, status, labels, slug, or honeypot. |
-| `PUT` | `/management/v1/forms/{formId}/origins` | Replaces the complete allowed-origin list. |
-| `DELETE` | `/management/v1/forms/{formId}` | Soft-archives a form. |
+| `GET` | `/forms` | Lists non-archived forms, newest first, with fields embedded. |
+| `POST` | `/forms` | Creates a `DRAFT` form with a generated honeypot field name. |
+| `GET` | `/forms/{formId}` | Gets one non-archived form and its fields. |
+| `PATCH` | `/forms/{formId}` | Updates the name, slug, status, submit-button label, success message, or honeypot field name. |
+| `PUT` | `/forms/{formId}/definition` | Replaces the form settings and complete field list in one request. |
+| `PUT` | `/forms/{formId}/origins` | Replaces the complete allowed-origin list. |
+| `DELETE` | `/forms/{formId}` | Archives a form. |
 
-Creating a form requires `name`; slug, submit-button label, and success message are optional. Slugs are normalized and made unique within the workspace.
+Creating a form requires `name`; slug, submit-button label, and success message are optional. Formbrew normalizes slugs and makes them unique within the workspace.
 
-Publishing requires at least one allowed origin and valid field definitions. Replacing origins with an empty array is allowed only while the form is not published. `{}` defaults to an empty origin list and therefore also clears origins on a draft.
+Publishing requires at least one allowed origin and valid field definitions. You can replace origins with an empty array only while the form isn't published. An empty body (`{}`) also clears the origins of an unpublished form.
 
-Archiving removes a form from normal list and retrieval operations. There is no restore endpoint.
+The definition operation requires `expectedSchemaVersion` and `expectedStatus`. If the form changed since you read it, the request returns `409` with `SchemaVersionConflict`. The operation deletes fields you leave out of the list.
+
+Archiving removes a form from list and retrieval operations. There is no restore operation.
 
 ## Form fields
 
 | Method | Path | Behavior |
 | --- | --- | --- |
-| `POST` | `/management/v1/forms/{formId}/fields` | Creates a field and increments the form schema version. |
-| `PUT` | `/management/v1/forms/{formId}/fields/layout` | Updates field positions and widths and increments the schema version once. |
-| `PATCH` | `/management/v1/forms/{formId}/fields/{fieldId}` | Updates a field and validates the complete merged definition. |
-| `DELETE` | `/management/v1/forms/{formId}/fields/{fieldId}` | Permanently deletes a field and increments the schema version. |
+| `POST` | `/forms/{formId}/fields` | Creates a field. |
+| `PUT` | `/forms/{formId}/fields/layout` | Updates the `rowIndex` and `columnIndex` of one or more fields. |
+| `PATCH` | `/forms/{formId}/fields/{fieldId}` | Updates a field and validates the complete merged definition. |
+| `DELETE` | `/forms/{formId}/fields/{fieldId}` | Permanently deletes a field. |
 
-Create and patch bodies use field-type-specific `configJson` and `validationJson`. The layout body contains one or more unique field IDs with `rowIndex`, `columnIndex`, and `width`. It may update a subset of the form's fields.
+Each successful field operation increments the form's `schemaVersion` once. Create and update bodies use field-type-specific `configJson` and `validationJson`. The layout body lists unique field IDs and can include a subset of the form's fields.
 
 See [Fields](/dashboard-guide/fields) for type behavior and validation limits.
 
-## Form tokens
+## Public form tokens
 
 | Method | Path | Behavior |
 | --- | --- | --- |
-| `GET` | `/management/v1/forms/{formId}/tokens` | Lists all public tokens, newest first, including revoked tokens. |
-| `POST` | `/management/v1/forms/{formId}/tokens` | Creates a public form token with optional name and expiration. |
-| `POST` | `/management/v1/forms/{formId}/tokens/{tokenId}/revoke` | Revokes a token; repeated revocation is idempotent. |
+| `GET` | `/forms/{formId}/tokens` | Lists all public form tokens, newest first, including revoked tokens. |
+| `POST` | `/forms/{formId}/tokens` | Creates a public form token with an optional name and expiration. |
+| `POST` | `/forms/{formId}/tokens/{tokenId}/revoke` | Revokes a token. Revoking a revoked token succeeds without changes. |
 
-Token responses include the complete publishable `tokenValue`, status, optional expiration, revocation timestamp, and last-use timestamp. Creating a token with an expiration in the past is accepted but produces an immediately unusable token.
+Token responses include the complete publishable `tokenValue`, status, expiration, revocation time, and last-use time. Reading tokens requires the owner, admin, or editor role. A token created with an expiration in the past is immediately unusable.
 
 ## Submissions
 
 | Method | Path | Behavior |
 | --- | --- | --- |
-| `GET` | `/management/v1/forms/{formId}/submissions` | Lists non-archived submissions, newest first. |
-| `GET` | `/management/v1/forms/{formId}/submissions/{submissionId}` | Gets one submission, including an archived submission. |
-| `PATCH` | `/management/v1/forms/{formId}/submissions/{submissionId}` | Updates status and/or internal notes. |
+| `GET` | `/forms/{formId}/submissions` | Lists submissions, newest first. Archived submissions appear only when you filter by `status`. Accepts `limit` and `before` for paging. |
+| `GET` | `/forms/{formId}/submissions/export` | Downloads non-archived submissions as a JSON file. |
+| `GET` | `/forms/{formId}/submissions/{submissionId}` | Gets one submission, including an archived submission. |
+| `PATCH` | `/forms/{formId}/submissions/{submissionId}` | Updates the status, internal notes, or both. |
+| `POST` | `/forms/{formId}/submissions/trash` | Moves the listed submissions (1 to 100) to trash, or none of them if any ID is unknown. |
+| `GET` | `/forms/{formId}/submissions/trash` | Lists trashed submissions with who deleted them and when they will be permanently deleted. |
+| `POST` | `/forms/{formId}/submissions/restore` | Restores the listed trashed submissions with their status and notes. |
 
-Submitted values, metadata, request origin, user agent, and form schema version are immutable. Status accepts `NEW`, `REVIEWED`, `SPAM`, or `ARCHIVED`. Archiving hides the record from the list but does not prevent direct retrieval.
+You can't change submitted values, metadata, request origin, user agent, or form schema version. Status accepts `NEW`, `REVIEWED`, `SPAM`, or `ARCHIVED`. Archiving hides a submission from the list and export but doesn't prevent direct retrieval.
 
-## Usage
+Trashed submissions are excluded from every list, read, and export, and are permanently deleted 30 days after they were trashed unless restored. See [Submissions](/dashboard-guide/submissions#delete-submissions).
+
+Exporting requires the owner, admin, or editor role, or the export capability on your membership.
+
+## Usage and plan
 
 | Method | Path | Behavior |
 | --- | --- | --- |
-| `GET` | `/management/v1/usage` | Returns accepted submissions for the current UTC calendar month. |
+| `GET` | `/usage` | Returns submission usage for the current UTC calendar month. |
+| `GET` | `/entitlements` | Returns the workspace plan and limits, without financial details. |
 
-The response includes an inclusive period start, exclusive period end, and submission count.
+The usage response includes the period start (inclusive) and end (exclusive), the accepted submission count, the included and grace allowances, the hard limit, and a usage state. See [Usage](/dashboard-guide/usage).
 
 ## Webhooks
 
 | Method | Path | Behavior |
 | --- | --- | --- |
-| `GET` | `/management/v1/forms/{formId}/webhooks` | Lists non-deleted webhook endpoints. |
-| `POST` | `/management/v1/forms/{formId}/webhooks` | Creates an endpoint and returns its plaintext signing secret once. |
-| `PATCH` | `/management/v1/forms/{formId}/webhooks/{webhookId}` | Updates name, URL, and/or enabled state. |
-| `DELETE` | `/management/v1/forms/{formId}/webhooks/{webhookId}` | Soft-deletes and disables an endpoint. |
-| `POST` | `/management/v1/forms/{formId}/webhooks/{webhookId}/rotate-secret` | Replaces the signing secret and returns the new plaintext value once. |
-| `GET` | `/management/v1/forms/{formId}/webhook-deliveries` | Lists recent delivery records with an optional bounded `limit`. |
+| `GET` | `/forms/{formId}/webhooks` | Lists webhook endpoints that haven't been deleted, newest first. |
+| `POST` | `/forms/{formId}/webhooks` | Creates an endpoint and returns its signing secret once. |
+| `PATCH` | `/forms/{formId}/webhooks/{webhookId}` | Updates the name, URL, enabled state, or a combination. |
+| `DELETE` | `/forms/{formId}/webhooks/{webhookId}` | Deletes and disables an endpoint. |
+| `POST` | `/forms/{formId}/webhooks/{webhookId}/rotate-secret` | Replaces the signing secret and returns the new secret once. |
+| `GET` | `/forms/{formId}/webhook-deliveries` | Lists the most recent delivery records, up to `limit`. |
 
-Each form supports five non-deleted endpoints; disabled endpoints still count. Production URLs must use HTTPS on the default port, contain no credentials or fragment, and resolve to public addresses.
+Your plan limits how many enabled endpoints each form can have; disabled endpoints don't count. Creating or enabling an endpoint beyond the limit returns `409` with `WebhookEndpointLimitExceeded`. Endpoint URLs must use HTTPS on port 443, contain no credentials or fragment, and point to public network addresses.
 
-Disabling, deleting, changing a URL, or rotating a secret cancels pending and failed deliveries for that endpoint. Completed and historical delivery records remain available.
+Disabling, deleting, changing the URL of, or rotating the secret of an endpoint cancels its pending and failed deliveries. Other delivery records are unaffected.
 
-Webhook delivery statuses are `PENDING`, `PROCESSING`, `FAILED`, `SUCCEEDED`, `ABANDONED`, and `CANCELED`. The event type is currently `submission.created`.
+Delivery statuses are `PENDING`, `PROCESSING`, `FAILED`, `SUCCEEDED`, `ABANDONED`, and `CANCELED`. The only event type is `submission.created`. See [Receive webhooks](/webhooks/overview).
+
+## Email settings
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| `GET` | `/forms/{formId}/email-settings` | Gets the form's owner notification, response-email field, and autoresponder settings. |
+| `PATCH` | `/forms/{formId}/email-settings` | Updates one or more of those settings. |
+
+## Agent access and activity
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| `GET` | `/workspace/management-tokens` | Lists the workspace's management tokens, including revoked tokens. |
+| `POST` | `/workspace/management-tokens` | Creates a management token and returns its secret once. |
+| `PATCH` | `/workspace/management-tokens/{tokenId}` | Renames a token or replaces its access. |
+| `POST` | `/workspace/management-tokens/{tokenId}/revoke` | Revokes a token permanently. |
+| `GET` | `/management-tokens/current` | Describes the management token that makes the request. |
+| `GET` | `/workspace/activity` | Lists recent changes to forms, fields, email settings, public form tokens, management tokens, and submissions. |
+
+Only owners and administrators can manage tokens and read activity, and only from the dashboard. `GET /management-tokens/current` works only with a management token and doesn't use `X-Workspace-ID`. Filter activity to one token with `managementTokenId`. See [Agent access](/dashboard-guide/agent-access).
+
+## Workspace administration
+
+The API also includes operations that support dashboard account and workspace flows:
+
+{/* docs-check: production-setting billing.purchases */}
+
+- **Workspaces**: create workspaces, update settings, schedule deletion, and restore a workspace pending deletion.
+- **Members and invitations**: invite, update, reactivate, and remove members; accept or decline invitations; and leave a workspace.
+- **Ownership transfer**: start, resend, cancel, and accept workspace ownership transfers.
+- **Billing**: view billing state and start plan purchases or billing management sessions.
+
+These operations depend on dashboard sign-in, email links, or hosted payment pages. Account-level operations in this group, such as creating a workspace or accepting an invitation, don't use `X-Workspace-ID`.

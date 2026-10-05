@@ -3,90 +3,254 @@ title: "Custom rendering"
 description: "Build a custom form UI on top of the public definition and typed client."
 ---
 
-# Custom rendering
-
-Use the headless JavaScript client or React hooks when you need complete control over markup and state while still loading the form definition from Formbrew.
+Use the headless JavaScript client or React hooks when you need complete control over markup and state while still loading the form definition from Formbrew. A custom renderer must implement every field type that your forms use. Formbrew validates every submission again on the server.
 
 ## Definition-driven rendering
 
+The public definition contains every field in one array, including Hidden and Content fields. The field definition is a discriminated union, so checking `field.type` narrows `configJson` and `validationJson` to the correct shape:
+
+{/* docs-check: typecheck */}
 ```ts
-import { createFormbrewClient } from "@formbrew/js";
+import { createFormbrewClient, type PublicFormField } from "@formbrew/js";
+import { getNumberInputConstraints } from "@formbrew/js/form";
 
-const client = createFormbrewClient({
-  baseUrl: "https://api.staging.formbrew.com/v1",
-  token: "YOUR_PUBLIC_TOKEN",
-});
-const definition = await client.fetchForm();
+const client = createFormbrewClient({ token: "YOUR_PUBLIC_FORM_TOKEN" });
 
-for (const field of definition.fields) {
+function describeField(field: PublicFormField): string {
   switch (field.type) {
     case "TEXT":
+      return field.configJson?.multiline ? "textarea" : "single-line text input";
     case "EMAIL":
     case "PHONE":
+      return `${field.type} input, length rules ${JSON.stringify(field.validationJson)}`;
     case "WEBSITE":
-      console.log(field.key, field.validationJson);
-      break;
-    case "NUMBER":
-      console.log(field.validationJson?.min, field.validationJson?.max);
-      break;
+      return field.validationJson?.httpsOnly ? "HTTPS URL input" : "URL input";
+    case "NUMBER": {
+      const { max, min, step } = getNumberInputConstraints(field.validationJson);
+      return `number input, min ${min}, max ${max}, step ${step}`;
+    }
     case "CHECKBOX":
-      console.log(field.required);
-      break;
+      return "single checkbox";
     case "CHECKBOX_GROUP":
-      console.log(field.configJson.options, field.validationJson);
-      break;
+      return `checkboxes: ${field.configJson.options.map((option) => option.value).join(", ")}`;
     case "RADIO_GROUP":
-      console.log(field.configJson.options);
-      break;
+    case "SELECT":
+      return `one of: ${field.configJson.options.map((option) => option.value).join(", ")}`;
+    case "DATETIME":
+      return `${field.configJson.mode} input`;
+    case "HIDDEN":
+      return `hidden input with default "${field.configJson?.defaultValue ?? ""}"`;
+    case "CONFIRM":
+      return `confirmation of field ${field.configJson.targetFieldId}`;
+    case "CONTENT":
+      return "display-only content";
+    default: {
+      const unsupported: never = field;
+      throw new Error(`Unsupported field: ${JSON.stringify(unsupported)}`);
+    }
   }
+}
+
+export async function describeForm(): Promise<string[]> {
+  const definition = await client.fetchForm();
+
+  return definition.fields.map(describeField);
 }
 ```
 
-The field definition is a discriminated union. Checking `field.type` narrows `configJson` and `validationJson` to the correct shape.
+Use `rowIndex` and `columnIndex` if you want to follow the layout from the form builder. `@formbrew/js` also exports type guards such as `isChoiceField()`, `isDateTimeField()`, `isHiddenField()`, `isConfirmField()`, and `isContentField()`.
 
-## Preserve the submission contract
+## Field contract
 
-Custom controls must follow these rules:
+| Type | Settings to honor | Value to submit |
+| --- | --- | --- |
+| `TEXT` | `configJson.multiline`; `minLength` and `maxLength` | String. Single-line fields replace line breaks with spaces before validation. |
+| `EMAIL`, `PHONE` | `minLength` and `maxLength` | String. The API trims leading and trailing spaces. |
+| `WEBSITE` | `minLength`, `maxLength`, `httpsOnly` | HTTP or HTTPS URL string |
+| `NUMBER` | `integer`, `allowNegative`, `maxDecimalPlaces`, `min`, `max` | Number or decimal string. The API rejects extra precision instead of rounding it. |
+| `CHECKBOX` | `required` means the visitor must check it | Boolean, or a checkbox string such as `"true"` or `"on"` |
+| `CHECKBOX_GROUP` | `options`, `minSelections`, `maxSelections` | Array of option `value` strings |
+| `RADIO_GROUP`, `SELECT` | `options` | One option `value` string |
+| `DATETIME` | `configJson.mode`: `date`, `time`, or `both` | `YYYY-MM-DD`, `HH:MM`, or `YYYY-MM-DDTHH:MM`. No timezone, no nonzero seconds. |
+| `HIDDEN` | `configJson.defaultValue` | String up to 10,000 characters |
+| `CONFIRM` | `configJson.targetFieldId`; mirror the target's control and rules | The same value as the target field |
+| `CONTENT` | `configJson.document` | Nothing |
+
+Follow these rules for every renderer:
 
 - Use `field.key` as the value property or HTML control name.
 - Submit choice `option.value`, not the visible option label or option ID.
-- Submit checkbox groups as arrays of option values.
-- Submit checkboxes as booleans when using the JSON client.
+- Render Hidden fields with their default value. The server does not substitute the default for a missing value, and it treats Hidden values as untrusted input.
+- Submit Confirm values. The server checks that they match the target, then discards them; they do not appear in stored submissions or webhooks. A Confirm field is required when its target is required.
+- Do not submit a value for a Content field. The API rejects it as an unknown field.
 - Include metadata separately from field values.
 - Render label associations and help text for accessibility.
-- Implement immediate browser validation if desired, but display API validation errors as authoritative.
+- Implement immediate browser validation if you want, but display API validation errors as authoritative.
+
+## Render Content fields
+
+Content fields contain a restricted, structured document instead of HTML. Blocks are paragraphs, level 2 and 3 headings, bullet lists, and ordered lists. Inline nodes are text, with optional bold, italic, and link marks, and hard line breaks. The API accepts only HTTP, HTTPS, and `mailto:` links.
+
+Build elements explicitly and never assign the content to `innerHTML`:
+
+{/* docs-check: typecheck */}
+```ts
+import type { ContentBlockNode, ContentDocument, ContentInlineNode } from "@formbrew/js";
+
+function renderInline(nodes: ContentInlineNode[] | undefined): Node[] {
+  return (nodes ?? []).map((node) => {
+    if (node.type === "hardBreak") {
+      return document.createElement("br");
+    }
+
+    let rendered: Node = document.createTextNode(node.text);
+
+    for (const mark of node.marks ?? []) {
+      let wrapper: HTMLElement;
+
+      if (mark.type === "bold") {
+        wrapper = document.createElement("strong");
+      } else if (mark.type === "italic") {
+        wrapper = document.createElement("em");
+      } else {
+        const link = document.createElement("a");
+        link.href = mark.attrs.href;
+        link.rel = "noopener noreferrer nofollow";
+        wrapper = link;
+      }
+
+      wrapper.append(rendered);
+      rendered = wrapper;
+    }
+
+    return rendered;
+  });
+}
+
+function renderBlock(block: ContentBlockNode): HTMLElement {
+  if (block.type === "paragraph") {
+    const paragraph = document.createElement("p");
+    paragraph.append(...renderInline(block.content));
+    return paragraph;
+  }
+
+  if (block.type === "heading") {
+    const heading = document.createElement(block.attrs.level === 3 ? "h3" : "h2");
+    heading.append(...renderInline(block.content));
+    return heading;
+  }
+
+  let list: HTMLOListElement | HTMLUListElement;
+
+  if (block.type === "orderedList") {
+    const orderedList = document.createElement("ol");
+
+    if (block.attrs) {
+      orderedList.start = block.attrs.start;
+    }
+
+    list = orderedList;
+  } else {
+    list = document.createElement("ul");
+  }
+
+  for (const item of block.content) {
+    const listItem = document.createElement("li");
+
+    for (const paragraph of item.content) {
+      const element = document.createElement("p");
+      element.append(...renderInline(paragraph.content));
+      listItem.append(element);
+    }
+
+    list.append(listItem);
+  }
+
+  return list;
+}
+
+export function renderContent(content: ContentDocument): DocumentFragment {
+  const fragment = document.createDocumentFragment();
+  fragment.append(...content.content.map(renderBlock));
+  return fragment;
+}
+```
 
 ## Collect a native form
 
 Framework-neutral helpers are available from `@formbrew/js/form`:
 
+| Helper | Purpose |
+| --- | --- |
+| `collectFormbrewSubmission(form)` | Collects string values, turns repeated names into arrays, moves underscore-prefixed names into metadata, and ignores files. |
+| `synchronizeConfirmFields(form, fields)` | Sets custom validity on Confirm controls that do not match their targets. |
+| `getCheckboxGroupValidationMessage(field, selectedCount)` | Returns the selection-count message, or an empty string when the count is valid. |
+| `getNumberInputConstraints(validation)` | Returns native `min`, `max`, and `step` values that do not exclude server-valid numbers. |
+| `resolveFormbrewMetadata(metadata)` | Resolves a metadata object or callback. |
+
+{/* docs-check: typecheck */}
 ```ts
-import { createFormbrewClient } from "@formbrew/js";
+import { createFormbrewClient, type PublicFormDefinition } from "@formbrew/js";
 import {
   collectFormbrewSubmission,
   getCheckboxGroupValidationMessage,
   resolveFormbrewMetadata,
+  synchronizeConfirmFields,
 } from "@formbrew/js/form";
 
-const client = createFormbrewClient({
-  baseUrl: "https://api.staging.formbrew.com/v1",
-  token: "YOUR_PUBLIC_TOKEN",
-});
-const collected = collectFormbrewSubmission(formElement);
-const metadata = {
-  ...resolveFormbrewMetadata(() => ({ source: "custom-form" })),
-  ...collected.metadata,
-};
+const client = createFormbrewClient({ token: "YOUR_PUBLIC_FORM_TOKEN" });
 
-await client.submit(collected.values, { metadata });
+export function connectCustomForm(form: HTMLFormElement, definition: PublicFormDefinition): void {
+  const synchronizeValidity = () => {
+    synchronizeConfirmFields(form, definition.fields);
+
+    for (const field of definition.fields) {
+      if (field.type !== "CHECKBOX_GROUP") {
+        continue;
+      }
+
+      const inputs = form.querySelectorAll<HTMLInputElement>(`input[name="${CSS.escape(field.key)}"]`);
+      const selectedCount = Array.from(inputs).filter((input) => input.checked).length;
+      inputs[0]?.setCustomValidity(getCheckboxGroupValidationMessage(field, selectedCount));
+    }
+  };
+
+  form.addEventListener("input", synchronizeValidity);
+  form.addEventListener("change", synchronizeValidity);
+  form.addEventListener("reset", () => queueMicrotask(synchronizeValidity));
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    synchronizeValidity();
+
+    if (!form.reportValidity()) {
+      return;
+    }
+
+    const collected = collectFormbrewSubmission(form);
+    const metadata = {
+      ...resolveFormbrewMetadata(() => ({ source: "custom-form" })),
+      ...collected.metadata,
+    };
+
+    client
+      .submit(collected.values, { metadata })
+      .then((result) => {
+        form.reset();
+        console.log(result.message);
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+      });
+  });
+}
 ```
 
-`collectFormbrewSubmission()` turns repeated string values into arrays, moves underscore-prefixed names into metadata, and ignores files.
+Run validity synchronization after a native reset has restored default values, as the `reset` listener above does.
 
 ## Honeypot behavior
 
-Managed renderers create the configured honeypot automatically. For a custom native renderer, add a visually hidden text input using `definition.honeypotFieldName`. Do not use `type="hidden"`, and do not fill the input programmatically.
+Managed renderers create the configured honeypot automatically. For a custom renderer, add a visually hidden text input named `definition.honeypotFieldName`. Do not use `type="hidden"`, and do not fill the input programmatically. A filled honeypot returns `400` with the message `Submission rejected.`
 
 ## Definition updates
 
-The public definition always represents the current published form. If your application caches it, use `schemaVersion` to identify changes and make sure cached definitions do not outlive your deployment's compatibility assumptions.
+The public definition always represents the current saved definition of the published form. `schemaVersion` increases when the definition changes. If your application caches a definition, refresh it after you change the form; otherwise visitors may submit removed fields or outdated option values, which the API rejects.

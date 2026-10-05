@@ -1,17 +1,41 @@
 ---
 title: "Usage"
-description: "Understand the current submission usage shown in the dashboard."
+description: "Understand the submission usage and plan details shown in the dashboard."
 ---
 
-# Usage
+The **Usage** page shows accepted public submissions for the current workspace during the current UTC calendar month. Every workspace member can view it.
 
-The **Usage** page shows accepted public submissions for the current UTC calendar month.
+{/* docs-check: production-setting billing.quota-enforcement */}
 
 | Value | Meaning |
 | --- | --- |
-| Current period | The first day of the current UTC month through the first day of the next month |
-| Submissions received | Public submissions accepted during that period |
+| Period | The first through the last day of the current month, in UTC |
+| Submissions received | Public submissions accepted during the period, across every form in the workspace |
+| Included submissions | The monthly submissions included in the workspace plan |
+| Grace allowance | Extra submissions the plan allows after the workspace uses its included submissions |
 
-Usage is recorded when a submission is stored successfully. Rejected validation, origin, honeypot, and rate-limit requests do not count as accepted submissions.
+The **Monthly allowance** progress bar compares submissions received with the included submissions plus the grace allowance. A status label shows how much of the included allowance the workspace has used.
 
-Plans, billing limits, invoices, payment controls, and historical usage charts are not available yet. The current counter preserves usage history for future plan and limit support.
+## What counts as a submission
+
+Formbrew records usage when it stores an accepted submission. These requests do not count:
+
+- Submissions rejected by validation.
+- Requests from origins that are not allowed.
+- Submissions that fill in the honeypot input.
+- Requests rejected by rate limits.
+- Requests to draft or archived forms.
+
+Changing a submission's status to **Spam** or **Archived** does not reduce usage. A new period starts on the first day of each month, in UTC.
+
+## Plans
+
+Your workspace plan sets the included submissions, grace allowance, active webhook endpoints per form, and team seats.
+
+The **Subscriptions** page shows the workspace's current plan. Only the workspace owner and members with the **Manage billing** permission can open it. See [Members and roles](/dashboard-guide/members).
+
+## Current limitations
+
+{/* docs-check: production-setting billing.purchases */}
+
+You cannot currently purchase or change a plan in the dashboard. Invoices, payment controls, and historical usage charts are not available.

@@ -1,0 +1,153 @@
+---
+title: "Troubleshooting"
+description: "Diagnose forms that do not load or submit, with the status and error codes the Public API returns."
+---
+
+Most integration failures come from the public-access setup: the allowed origins, the form status, or the public form token. Start by collecting the facts, then find the matching problem below.
+
+## Collect the facts
+
+1. Open the page that contains the form, then open the browser developer tools.
+2. In the **Network** panel, find the request to `api.formbrew.com` and note its status code and JSON response. The `error` and `message` properties identify the problem.
+3. Note the `requestId` from the response body or the `X-Request-ID` response header if you need to report the problem.
+4. In the **Console** panel, look for Content Security Policy, integrity, or JavaScript errors.
+5. For the hosted embed, inspect the `<formbrew-form>` element. Its `data-formbrew-state` attribute is `loading`, `ready`, or `error`.
+
+If no request reaches `api.formbrew.com`, the problem is on the page: the script did not load, the code did not run, or a Content Security Policy blocked the connection.
+
+## Check the definition with curl
+
+Request the public definition with the origin of your website:
+
+```bash
+curl --include https://api.formbrew.com/v1/forms/YOUR_PUBLIC_FORM_TOKEN \
+  --header 'Origin: https://www.example.com'
+```
+
+A `200` response with a `data` object means the token is active, the form is published, and that origin is allowed. Any other status returns the same error codes described below.
+
+{/* docs-check: production-setting email.delivery */}
+
+<Warning>
+  curl sets the `Origin` header itself, so it only simulates a browser on that origin. A successful curl request does not prove that the browser sends the same origin, that your Content Security Policy allows the script and the API connection, that the form renders, or that submissions, email notifications, or webhooks work. Test those from the website itself.
+</Warning>
+
+{/* docs-check: production-setting email.delivery */}
+
+Definition requests count toward the [request limits](/integrations/submissions-and-errors#request-limits). Do not use curl to post test submissions to a live form: Formbrew stores each accepted submission, which triggers the form's notifications and webhooks.
+
+To check the hosted embed file and its integrity value:
+
+```bash
+curl --silent --location https://cdn.jsdelivr.net/npm/@formbrew/embed@0.4.0/dist/embed.js \
+  | openssl dgst -sha384 -binary | openssl base64 -A
+```
+
+The output must equal the part of the `integrity` attribute after `sha384-`.
+
+## Common problems
+
+### Origin rejected
+
+**Response:** `403` `Forbidden`, `Origin is not allowed for this form.`
+
+The request origin is not one of the form's [allowed origins](/integrations/public-access#allowed-origins). Compare the page's exact origin with the list in **Public access**:
+
+- `http` and `https` are different origins.
+- `www.example.com` and `example.com` are different origins.
+- Development servers need the exact port, such as `http://localhost:5173`.
+- Pages opened from a local file or a sandboxed frame send `Origin: null`, which Formbrew always rejects.
+- Native HTML form posts send `Origin: null` when the site's `Referrer-Policy` is `no-referrer` or `same-origin`.
+- Server-side requests need an explicit `origin` in the SDK or an `Origin` header.
+
+The response is readable JSON rather than a CORS error because the Public API answers CORS requests from any HTTP or HTTPS origin before it checks the allowed origins.
+
+### Form not found
+
+**Response:** `404` `NotFound`, `Token not found.` or `Form not found.`
+
+- `Token not found.`: the token is misspelled or truncated. Copy it again from **Public access**.
+- `Form not found.`: the form is not published, or its workspace is no longer active. Set the form's **Status** to **Published**.
+
+### Token revoked or expired
+
+**Response:** `401` `Unauthorized`, `Token has been revoked.` or `Token has expired.`
+
+Generate a new token in **Public access**, deploy it, and remove the old token from your code.
+
+### Rate limited
+
+**Response:** `429` `RateLimitExceeded`, or `503` `RateLimitUnavailable`
+
+The client exceeded a [request limit](/integrations/submissions-and-errors#request-limits), or rate limiting was temporarily unavailable. Stop automatic retries and try again later. If your server fetches definitions for server rendering, cache the result: all of your server's requests share one IP address.
+
+### Validation errors
+
+**Response:** `400` `ValidationError`
+
+The `message` describes the first problem the API found:
+
+| Message | Likely cause |
+| --- | --- |
+| `Request validation failed.` with `details` | The JSON body is not a `{ "values": { ... } }` envelope |
+| `Unknown submission field: <key>.` | The markup or a cached definition is out of date, or the request submitted a Content field key |
+| `<Label> is required.` | A required field was empty or missing |
+| `<Label> contains an unknown option value.` | Choice options changed since you copied the markup |
+| `<Label> must match <Target label>.` | A Confirm value differs from its target |
+| `Submission rejected.` | The honeypot input has a value |
+| `File uploads are not supported yet.` | The form contains a file input |
+
+After you change fields or options, copy the generated HTML again and refresh any cached definitions.
+
+### Form changed during submission
+
+**Response:** `409` `SchemaVersionConflict`, `The form changed. Reload it and try again.`
+
+Someone saved a change to the form while Formbrew was processing the submission. Reload the definition, check the values against the current fields, and submit again.
+
+### Submission limit reached
+
+{/* docs-check: production-setting billing.quota-enforcement */}
+
+**Response:** `402` `PLAN_LIMIT_REACHED`, `This form is temporarily unable to accept submissions.`
+
+{/* docs-check: production-setting billing.quota-enforcement */}
+
+The workspace cannot accept more submissions on its current plan. Definition requests still succeed.
+
+### SDK cannot read the definition
+
+**Error:** `FormbrewError` with code `InvalidResponse` and message `Formbrew returned an invalid response.`, usually with status `200`
+
+The SDK or embed version is older than the form's features. Forms with Date/Time, Hidden, Confirm, or Content fields, multiline Text, or Number sign and decimal settings need version `0.4.0`. Upgrade `@formbrew/js` or `@formbrew/react`, or update the embed script URL and integrity together.
+
+### Content Security Policy blocks
+
+**Symptom:** Console errors such as `Refused to load the script`, `Refused to connect`, or `Refused to load the stylesheet`
+
+Allow the sources listed for your integration:
+
+- Hosted embed: see [Content Security Policy](/integrations/embed#content-security-policy).
+- SDKs: `https://api.formbrew.com` in `connect-src`.
+- Native HTML forms: `https://api.formbrew.com` in `form-action`.
+
+An error such as `Failed to find a valid digest in the 'integrity' attribute` means the script URL and integrity value do not belong together. Copy both from the same version.
+
+### Embed shows nothing or an error
+
+- No `<formbrew-form>` content and no API request: the script did not load. Check the console for Content Security Policy or integrity errors.
+- `Add a public token with the token attribute.`: the element has no `token` attribute.
+- `data-formbrew-state="error"`: the definition did not load. Listen for `formbrew:error` and read `event.detail.error`.
+
+### Server rendering and hydration problems
+
+| Symptom | Fix |
+| --- | --- |
+| `document is not defined` or `customElements is not defined` during server rendering | Mount the DOM renderer or load the embed only in client-side code |
+| A server-side definition request returns `403` | Pass an allowed `origin` to `createFormbrewClient()` on the server |
+| The server renders a loading state | Expected without `initialDefinition`. Pass a server-fetched definition to render the full form. |
+| Hydration mismatch warnings | Pass the same `initialDefinition` on the server and the client. Give separate React roots their own `identifierPrefix`. |
+| An error about passing functions to Client Components | Move callbacks such as `onSuccess` into your own Client Component |
+| The honeypot input is visible | Load the Formbrew stylesheet, or add a `.fb-honeypot` rule if your policy blocks inline styles |
+
+See [SSR and client boundaries](/integrations/react#ssr-and-client-boundaries) for the React rendering model.

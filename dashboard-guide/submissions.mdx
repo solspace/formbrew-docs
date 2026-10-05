@@ -1,11 +1,11 @@
 ---
 title: "Submissions"
-description: "Review submitted values, update workflow status, and add internal notes."
+description: "Review submitted values, update workflow status, add internal notes, export submissions, and delete or restore them."
 ---
 
-# Submissions
+Open a form and select **Submissions** to view its inbox. Newest submissions appear first. Each row shows its status, ID, creation time, and up to four submitted values.
 
-Open a form and select **Submissions** to view its inbox. Newest submissions appear first. Each row shows its status, ID, creation time, and a preview of submitted values.
+Select **Refresh** to load new submissions.
 
 ## Submission statuses
 
@@ -14,24 +14,48 @@ Open a form and select **Submissions** to view its inbox. Newest submissions app
 | New | Not reviewed yet. This is the default for accepted submissions. |
 | Reviewed | Handled or acknowledged by your team. |
 | Spam | Accepted by the API but later classified as unwanted. |
-| Archived | Removed from the normal inbox. |
+| Archived | Removed from the inbox. |
 
-Automatic honeypot detections are rejected before storage and do not appear with the Spam status.
+Formbrew rejects submissions that fill in the [honeypot input](/dashboard-guide/forms#honeypot-input) and never stores them. They do not appear in the inbox.
 
 ## Review a submission
 
 Select a submission to open its details. The page shows:
 
-- Values matched to the field labels and keys from the submitted schema version.
+- Values matched to the field labels and keys.
 - Created and updated timestamps.
 - Submission ID and request origin.
 - Editable status and internal notes.
 
-Select **Save details** after changing the status or notes. Submitted values are read-only.
+Hidden field values appear with the other values. Confirm and Content fields never have stored values, so they do not appear.
+
+Change the **Status** or **Notes**, then select **Save details**. Submitted values are read-only. Owners, admins, and editors can change status and notes.
+
+## Export submissions
+
+Select **Export JSON** to download the form's submissions as a JSON file. The file contains every submission in the inbox, including its status, notes, values, origin, and timestamps. The file excludes archived and trashed submissions.
+
+Owners, admins, and editors can export submissions. Viewers need the **Export submissions** permission. See [Members and roles](/dashboard-guide/members).
+
+## Delete submissions
+
+Open a submission and select **Move to trash**. Formbrew asks you to confirm, because trashed submissions are permanently deleted after 30 days unless you restore them.
+
+Trashed submissions disappear from the inbox, from exports, and from the Management API. Deleting a submission doesn't cancel notifications or webhooks that were already scheduled when it arrived, and doesn't change your submission usage.
+
+Owners, admins, and editors can delete submissions. An agent with the **Move submissions to trash** permission can delete the exact submissions you approve. See [Agent access](/dashboard-guide/agent-access).
+
+## Restore submissions
+
+Open the form's **Submissions** tab and switch to **Trash**. Each trashed submission shows who deleted it, when, and when it will be permanently deleted. For agent deletions, the entry shows the token's name and the person who issued it.
+
+Select **Restore** to return a submission to the inbox with its status and notes unchanged. Restoring doesn't send notifications or webhooks again.
+
+After 30 days, Formbrew permanently deletes the submission with its delivery history. The deletion appears in **Activity**.
 
 ## Schema changes
 
-Each field create, update, delete, or reorder changes the form schema version. If a submission used an older version than the current form, the detail page displays raw stored keys rather than potentially incorrect current labels.
+Each saved change to fields, layout, or the form's name, slug, submit button, success message, or honeypot name creates a new schema version. If a submission used an older version than the current form, the detail page shows the raw stored keys instead of field labels.
 
 <Tip>
   Use durable, descriptive field keys from the beginning. Keys remain the most reliable way to interpret historical submissions and webhook payloads after labels change.
@@ -39,4 +63,4 @@ Each field create, update, delete, or reorder changes the form schema version. I
 
 ## Current limitations
 
-The dashboard does not currently provide inbox search, filtering, pagination, bulk actions, export, deletion, or an archived-submission view. Archiving removes a submission from the normal list.
+The dashboard does not currently provide inbox search, filtering, pagination, bulk actions, CSV export, or an archived-submission view. Archiving removes a submission from the inbox and from exports. Spam submissions stay in the inbox until you archive them.

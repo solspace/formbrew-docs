@@ -3,8 +3,6 @@ title: "Formbrew documentation"
 description: "Build forms in the dashboard and connect them to any frontend."
 ---
 
-# Formbrew documentation
-
 Formbrew lets you design forms in a dashboard, publish them to trusted websites, and collect submissions without building a form backend.
 
 ## Choose where to start
@@ -16,25 +14,30 @@ Formbrew lets you design forms in a dashboard, publish them to trusted websites,
   <Card title="Connect a frontend" icon="code" href="/integrations/quickstart">
     Use the hosted embed, plain HTML, JavaScript SDK, React SDK, or direct HTTP.
   </Card>
-  <Card title="Use the public API" icon="brackets-curly" href="/api-reference/public-overview">
+  <Card title="Use the Public API" icon="brackets-curly" href="/api-reference/public-overview">
     Fetch public form definitions and submit values from websites or servers.
   </Card>
-  <Card title="Explore the management API" icon="sliders" href="/api-reference/management-overview">
-    Review the internal API used to manage forms, fields, tokens, submissions, and webhooks.
+  <Card title="Explore the Management API" icon="sliders" href="/api-reference/management-overview">
+    Review the API the dashboard uses to manage forms, fields, tokens, submissions, and webhooks.
   </Card>
 </CardGroup>
 
 ## The basic workflow
 
-1. Create a form and add fields in the dashboard.
-2. Add every website origin that will load or submit the form.
-3. Generate a public form token and publish the form.
-4. Connect the form using the integration method that fits your frontend.
-5. Review submissions in the dashboard or forward them with signed webhooks.
+1. Sign in at [formbrew.com](https://formbrew.com) and open a workspace.
+2. Create a form and add fields in the dashboard.
+3. Add an allowed origin for every website that will load or submit the form.
+4. Generate a public form token and publish the form.
+5. Connect the form using the integration method that fits your frontend.
+6. Review submissions in the dashboard or forward them with signed webhooks.
 
 <Note>
-  Public form tokens are publishable identifiers. They can appear in browser code. Access is also restricted by the form's publication status and allowed origins.
+  Public form tokens are publishable identifiers. They can appear in browser code. The form's publication status and allowed origins also restrict access.
 </Note>
+
+## Work with your team
+
+Forms belong to a workspace. You can create several workspaces and switch between them. Each workspace has an owner and can have members with different roles. See [Workspaces](/dashboard-guide/workspaces) and [Members and roles](/dashboard-guide/members).
 
 ## Integration options
 

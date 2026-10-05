@@ -1,0 +1,2505 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "description": "Public Formbrew form manifest and submission API.",
+    "title": "Formbrew Public API",
+    "version": "1.0.0"
+  },
+  "components": {
+    "schemas": {}
+  },
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "summary": "Check public API health",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "ok"
+                          ]
+                        },
+                        "surface": {
+                          "type": "string",
+                          "enum": [
+                            "app",
+                            "public"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "status",
+                        "surface"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/forms/{token}": {
+      "get": {
+        "summary": "Get a published form definition",
+        "tags": [
+          "Forms"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "token",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "fields": {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "configJson": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "multiline": {
+                                            "type": "boolean"
+                                          }
+                                        },
+                                        "required": [
+                                          "multiline"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "TEXT"
+                                  },
+                                  "validationJson": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "maxLength": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 10000
+                                          },
+                                          "minLength": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 10000
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "configJson": {
+                                    "type": "null"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "EMAIL"
+                                  },
+                                  "validationJson": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "maxLength": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 10000
+                                          },
+                                          "minLength": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 10000
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "configJson": {
+                                    "type": "null"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "NUMBER"
+                                  },
+                                  "validationJson": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "allowNegative": {
+                                            "type": "boolean"
+                                          },
+                                          "integer": {
+                                            "type": "boolean"
+                                          },
+                                          "max": {
+                                            "type": "number"
+                                          },
+                                          "maxDecimalPlaces": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 15
+                                          },
+                                          "min": {
+                                            "type": "number"
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "configJson": {
+                                    "type": "null"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "PHONE"
+                                  },
+                                  "validationJson": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "maxLength": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 64
+                                          },
+                                          "minLength": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 64
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "configJson": {
+                                    "type": "null"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "WEBSITE"
+                                  },
+                                  "validationJson": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "httpsOnly": {
+                                            "type": "boolean"
+                                          },
+                                          "maxLength": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 10000
+                                          },
+                                          "minLength": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 10000
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "configJson": {
+                                    "type": "null"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "CHECKBOX"
+                                  },
+                                  "validationJson": {
+                                    "type": "null"
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "configJson": {
+                                    "type": "object",
+                                    "properties": {
+                                      "options": {
+                                        "minItems": 1,
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            },
+                                            "label": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            },
+                                            "value": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          },
+                                          "required": [
+                                            "id",
+                                            "label",
+                                            "value"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      },
+                                      "reservedValues": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string",
+                                          "minLength": 1
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "options"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "CHECKBOX_GROUP"
+                                  },
+                                  "validationJson": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "maxSelections": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "minSelections": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 9007199254740991
+                                          }
+                                        },
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "configJson": {
+                                    "type": "object",
+                                    "properties": {
+                                      "options": {
+                                        "minItems": 1,
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            },
+                                            "label": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            },
+                                            "value": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          },
+                                          "required": [
+                                            "id",
+                                            "label",
+                                            "value"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      },
+                                      "reservedValues": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string",
+                                          "minLength": 1
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "options"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "RADIO_GROUP"
+                                  },
+                                  "validationJson": {
+                                    "type": "null"
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "configJson": {
+                                    "type": "object",
+                                    "properties": {
+                                      "options": {
+                                        "minItems": 1,
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            },
+                                            "label": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            },
+                                            "value": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            }
+                                          },
+                                          "required": [
+                                            "id",
+                                            "label",
+                                            "value"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      },
+                                      "reservedValues": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string",
+                                          "minLength": 1
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "options"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "SELECT"
+                                  },
+                                  "validationJson": {
+                                    "type": "null"
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "configJson": {
+                                    "type": "object",
+                                    "properties": {
+                                      "mode": {
+                                        "type": "string",
+                                        "enum": [
+                                          "date",
+                                          "time",
+                                          "both"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "mode"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "DATETIME"
+                                  },
+                                  "validationJson": {
+                                    "type": "null"
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean",
+                                    "const": false
+                                  },
+                                  "configJson": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "defaultValue": {
+                                            "type": "string",
+                                            "maxLength": 10000
+                                          }
+                                        },
+                                        "required": [
+                                          "defaultValue"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "HIDDEN"
+                                  },
+                                  "validationJson": {
+                                    "type": "null"
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean",
+                                    "const": false
+                                  },
+                                  "configJson": {
+                                    "type": "object",
+                                    "properties": {
+                                      "targetFieldId": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    },
+                                    "required": [
+                                      "targetFieldId"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "CONFIRM"
+                                  },
+                                  "validationJson": {
+                                    "type": "null"
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columnIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "helpText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "placeholder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "rowIndex": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "required": {
+                                    "type": "boolean",
+                                    "const": false
+                                  },
+                                  "configJson": {
+                                    "type": "object",
+                                    "properties": {
+                                      "document": {
+                                        "type": "object",
+                                        "properties": {
+                                          "content": {
+                                            "type": "array",
+                                            "items": {
+                                              "anyOf": [
+                                                {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "content": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "anyOf": [
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "marks": {
+                                                                "maxItems": 3,
+                                                                "type": "array",
+                                                                "items": {
+                                                                  "anyOf": [
+                                                                    {
+                                                                      "type": "object",
+                                                                      "properties": {
+                                                                        "type": {
+                                                                          "type": "string",
+                                                                          "const": "bold"
+                                                                        }
+                                                                      },
+                                                                      "required": [
+                                                                        "type"
+                                                                      ],
+                                                                      "additionalProperties": false
+                                                                    },
+                                                                    {
+                                                                      "type": "object",
+                                                                      "properties": {
+                                                                        "type": {
+                                                                          "type": "string",
+                                                                          "const": "italic"
+                                                                        }
+                                                                      },
+                                                                      "required": [
+                                                                        "type"
+                                                                      ],
+                                                                      "additionalProperties": false
+                                                                    },
+                                                                    {
+                                                                      "type": "object",
+                                                                      "properties": {
+                                                                        "attrs": {
+                                                                          "type": "object",
+                                                                          "properties": {
+                                                                            "href": {
+                                                                              "type": "string",
+                                                                              "maxLength": 2048
+                                                                            }
+                                                                          },
+                                                                          "required": [
+                                                                            "href"
+                                                                          ],
+                                                                          "additionalProperties": false
+                                                                        },
+                                                                        "type": {
+                                                                          "type": "string",
+                                                                          "const": "link"
+                                                                        }
+                                                                      },
+                                                                      "required": [
+                                                                        "attrs",
+                                                                        "type"
+                                                                      ],
+                                                                      "additionalProperties": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              },
+                                                              "text": {
+                                                                "type": "string",
+                                                                "minLength": 1
+                                                              },
+                                                              "type": {
+                                                                "type": "string",
+                                                                "const": "text"
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "text",
+                                                              "type"
+                                                            ],
+                                                            "additionalProperties": false
+                                                          },
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "type": {
+                                                                "type": "string",
+                                                                "const": "hardBreak"
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "type"
+                                                            ],
+                                                            "additionalProperties": false
+                                                          }
+                                                        ]
+                                                      }
+                                                    },
+                                                    "type": {
+                                                      "type": "string",
+                                                      "const": "paragraph"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "type"
+                                                  ],
+                                                  "additionalProperties": false
+                                                },
+                                                {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "attrs": {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "level": {
+                                                          "anyOf": [
+                                                            {
+                                                              "type": "number",
+                                                              "const": 2
+                                                            },
+                                                            {
+                                                              "type": "number",
+                                                              "const": 3
+                                                            }
+                                                          ]
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "level"
+                                                      ],
+                                                      "additionalProperties": false
+                                                    },
+                                                    "content": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "anyOf": [
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "marks": {
+                                                                "maxItems": 3,
+                                                                "type": "array",
+                                                                "items": {
+                                                                  "anyOf": [
+                                                                    {
+                                                                      "type": "object",
+                                                                      "properties": {
+                                                                        "type": {
+                                                                          "type": "string",
+                                                                          "const": "bold"
+                                                                        }
+                                                                      },
+                                                                      "required": [
+                                                                        "type"
+                                                                      ],
+                                                                      "additionalProperties": false
+                                                                    },
+                                                                    {
+                                                                      "type": "object",
+                                                                      "properties": {
+                                                                        "type": {
+                                                                          "type": "string",
+                                                                          "const": "italic"
+                                                                        }
+                                                                      },
+                                                                      "required": [
+                                                                        "type"
+                                                                      ],
+                                                                      "additionalProperties": false
+                                                                    },
+                                                                    {
+                                                                      "type": "object",
+                                                                      "properties": {
+                                                                        "attrs": {
+                                                                          "type": "object",
+                                                                          "properties": {
+                                                                            "href": {
+                                                                              "type": "string",
+                                                                              "maxLength": 2048
+                                                                            }
+                                                                          },
+                                                                          "required": [
+                                                                            "href"
+                                                                          ],
+                                                                          "additionalProperties": false
+                                                                        },
+                                                                        "type": {
+                                                                          "type": "string",
+                                                                          "const": "link"
+                                                                        }
+                                                                      },
+                                                                      "required": [
+                                                                        "attrs",
+                                                                        "type"
+                                                                      ],
+                                                                      "additionalProperties": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              },
+                                                              "text": {
+                                                                "type": "string",
+                                                                "minLength": 1
+                                                              },
+                                                              "type": {
+                                                                "type": "string",
+                                                                "const": "text"
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "text",
+                                                              "type"
+                                                            ],
+                                                            "additionalProperties": false
+                                                          },
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "type": {
+                                                                "type": "string",
+                                                                "const": "hardBreak"
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "type"
+                                                            ],
+                                                            "additionalProperties": false
+                                                          }
+                                                        ]
+                                                      }
+                                                    },
+                                                    "type": {
+                                                      "type": "string",
+                                                      "const": "heading"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "attrs",
+                                                    "type"
+                                                  ],
+                                                  "additionalProperties": false
+                                                },
+                                                {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "content": {
+                                                      "minItems": 1,
+                                                      "type": "array",
+                                                      "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "content": {
+                                                            "minItems": 1,
+                                                            "type": "array",
+                                                            "items": {
+                                                              "type": "object",
+                                                              "properties": {
+                                                                "content": {
+                                                                  "type": "array",
+                                                                  "items": {
+                                                                    "anyOf": [
+                                                                      {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                          "marks": {
+                                                                            "maxItems": 3,
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                              "anyOf": [
+                                                                                {
+                                                                                  "type": "object",
+                                                                                  "properties": {
+                                                                                    "type": {
+                                                                                      "type": "string",
+                                                                                      "const": "bold"
+                                                                                    }
+                                                                                  },
+                                                                                  "required": [
+                                                                                    "type"
+                                                                                  ],
+                                                                                  "additionalProperties": false
+                                                                                },
+                                                                                {
+                                                                                  "type": "object",
+                                                                                  "properties": {
+                                                                                    "type": {
+                                                                                      "type": "string",
+                                                                                      "const": "italic"
+                                                                                    }
+                                                                                  },
+                                                                                  "required": [
+                                                                                    "type"
+                                                                                  ],
+                                                                                  "additionalProperties": false
+                                                                                },
+                                                                                {
+                                                                                  "type": "object",
+                                                                                  "properties": {
+                                                                                    "attrs": {
+                                                                                      "type": "object",
+                                                                                      "properties": {
+                                                                                        "href": {
+                                                                                          "type": "string",
+                                                                                          "maxLength": 2048
+                                                                                        }
+                                                                                      },
+                                                                                      "required": [
+                                                                                        "href"
+                                                                                      ],
+                                                                                      "additionalProperties": false
+                                                                                    },
+                                                                                    "type": {
+                                                                                      "type": "string",
+                                                                                      "const": "link"
+                                                                                    }
+                                                                                  },
+                                                                                  "required": [
+                                                                                    "attrs",
+                                                                                    "type"
+                                                                                  ],
+                                                                                  "additionalProperties": false
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          },
+                                                                          "text": {
+                                                                            "type": "string",
+                                                                            "minLength": 1
+                                                                          },
+                                                                          "type": {
+                                                                            "type": "string",
+                                                                            "const": "text"
+                                                                          }
+                                                                        },
+                                                                        "required": [
+                                                                          "text",
+                                                                          "type"
+                                                                        ],
+                                                                        "additionalProperties": false
+                                                                      },
+                                                                      {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                          "type": {
+                                                                            "type": "string",
+                                                                            "const": "hardBreak"
+                                                                          }
+                                                                        },
+                                                                        "required": [
+                                                                          "type"
+                                                                        ],
+                                                                        "additionalProperties": false
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                },
+                                                                "type": {
+                                                                  "type": "string",
+                                                                  "const": "paragraph"
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "type"
+                                                              ],
+                                                              "additionalProperties": false
+                                                            }
+                                                          },
+                                                          "type": {
+                                                            "type": "string",
+                                                            "const": "listItem"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "content",
+                                                          "type"
+                                                        ],
+                                                        "additionalProperties": false
+                                                      }
+                                                    },
+                                                    "type": {
+                                                      "type": "string",
+                                                      "const": "bulletList"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "content",
+                                                    "type"
+                                                  ],
+                                                  "additionalProperties": false
+                                                },
+                                                {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "attrs": {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "start": {
+                                                          "type": "integer",
+                                                          "minimum": 1,
+                                                          "maximum": 1000000
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "start"
+                                                      ],
+                                                      "additionalProperties": false
+                                                    },
+                                                    "content": {
+                                                      "minItems": 1,
+                                                      "type": "array",
+                                                      "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "content": {
+                                                            "minItems": 1,
+                                                            "type": "array",
+                                                            "items": {
+                                                              "type": "object",
+                                                              "properties": {
+                                                                "content": {
+                                                                  "type": "array",
+                                                                  "items": {
+                                                                    "anyOf": [
+                                                                      {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                          "marks": {
+                                                                            "maxItems": 3,
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                              "anyOf": [
+                                                                                {
+                                                                                  "type": "object",
+                                                                                  "properties": {
+                                                                                    "type": {
+                                                                                      "type": "string",
+                                                                                      "const": "bold"
+                                                                                    }
+                                                                                  },
+                                                                                  "required": [
+                                                                                    "type"
+                                                                                  ],
+                                                                                  "additionalProperties": false
+                                                                                },
+                                                                                {
+                                                                                  "type": "object",
+                                                                                  "properties": {
+                                                                                    "type": {
+                                                                                      "type": "string",
+                                                                                      "const": "italic"
+                                                                                    }
+                                                                                  },
+                                                                                  "required": [
+                                                                                    "type"
+                                                                                  ],
+                                                                                  "additionalProperties": false
+                                                                                },
+                                                                                {
+                                                                                  "type": "object",
+                                                                                  "properties": {
+                                                                                    "attrs": {
+                                                                                      "type": "object",
+                                                                                      "properties": {
+                                                                                        "href": {
+                                                                                          "type": "string",
+                                                                                          "maxLength": 2048
+                                                                                        }
+                                                                                      },
+                                                                                      "required": [
+                                                                                        "href"
+                                                                                      ],
+                                                                                      "additionalProperties": false
+                                                                                    },
+                                                                                    "type": {
+                                                                                      "type": "string",
+                                                                                      "const": "link"
+                                                                                    }
+                                                                                  },
+                                                                                  "required": [
+                                                                                    "attrs",
+                                                                                    "type"
+                                                                                  ],
+                                                                                  "additionalProperties": false
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          },
+                                                                          "text": {
+                                                                            "type": "string",
+                                                                            "minLength": 1
+                                                                          },
+                                                                          "type": {
+                                                                            "type": "string",
+                                                                            "const": "text"
+                                                                          }
+                                                                        },
+                                                                        "required": [
+                                                                          "text",
+                                                                          "type"
+                                                                        ],
+                                                                        "additionalProperties": false
+                                                                      },
+                                                                      {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                          "type": {
+                                                                            "type": "string",
+                                                                            "const": "hardBreak"
+                                                                          }
+                                                                        },
+                                                                        "required": [
+                                                                          "type"
+                                                                        ],
+                                                                        "additionalProperties": false
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                },
+                                                                "type": {
+                                                                  "type": "string",
+                                                                  "const": "paragraph"
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "type"
+                                                              ],
+                                                              "additionalProperties": false
+                                                            }
+                                                          },
+                                                          "type": {
+                                                            "type": "string",
+                                                            "const": "listItem"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "content",
+                                                          "type"
+                                                        ],
+                                                        "additionalProperties": false
+                                                      }
+                                                    },
+                                                    "type": {
+                                                      "type": "string",
+                                                      "const": "orderedList"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "content",
+                                                    "type"
+                                                  ],
+                                                  "additionalProperties": false
+                                                }
+                                              ]
+                                            }
+                                          },
+                                          "type": {
+                                            "type": "string",
+                                            "const": "doc"
+                                          }
+                                        },
+                                        "required": [
+                                          "content",
+                                          "type"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "version": {
+                                        "type": "number",
+                                        "const": 1
+                                      }
+                                    },
+                                    "required": [
+                                      "document",
+                                      "version"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "const": "CONTENT"
+                                  },
+                                  "validationJson": {
+                                    "type": "null"
+                                  }
+                                },
+                                "required": [
+                                  "columnIndex",
+                                  "helpText",
+                                  "id",
+                                  "key",
+                                  "label",
+                                  "placeholder",
+                                  "rowIndex",
+                                  "required",
+                                  "configJson",
+                                  "type",
+                                  "validationJson"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ]
+                          }
+                        },
+                        "honeypotFieldName": {
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "schemaVersion": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "submitButtonLabel": {
+                          "type": "string"
+                        },
+                        "successMessage": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "fields",
+                        "honeypotFieldName",
+                        "id",
+                        "name",
+                        "schemaVersion",
+                        "slug",
+                        "submitButtonLabel",
+                        "successMessage"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/forms/{token}/submit": {
+      "post": {
+        "summary": "Submit a published form",
+        "tags": [
+          "Submissions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "metadata": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "values": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  }
+                },
+                "required": [
+                  "values"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "token",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.formbrew.com"
+    }
+  ]
+}

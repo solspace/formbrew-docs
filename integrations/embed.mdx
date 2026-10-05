@@ -3,56 +3,67 @@ title: "Hosted embed"
 description: "Render and submit a managed Formbrew form with one script tag."
 ---
 
-# Hosted embed
+The hosted embed is a version-pinned browser script from jsDelivr. It registers the `<formbrew-form>` custom element, which renders a managed form into your page. The form uses light DOM rather than an iframe or shadow DOM, so your site's CSS can theme it.
 
-The hosted embed is a version-pinned browser script that renders a managed form into your page. It uses light DOM rather than an iframe, so your site can theme the generated form.
+## Add a form
 
-## Auto-mount a form
-
-Place the script in the document body where the form should appear:
+Load the script once, then place a `<formbrew-form>` element wherever a form should appear:
 
 ```html
 <script
   crossorigin="anonymous"
   defer
-  integrity="sha384-iTXCBbm6ZFJtVjznaAtvkZ1QX0PY7m+ZZL4nECY+PN0Tpo3siEhbwW5BJe+WWot9"
-  src="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.1.0-beta.1/dist/embed.js"
-  data-formbrew-token="YOUR_PUBLIC_TOKEN"
-  data-formbrew-base-url="https://api.staging.formbrew.com/v1"
+  integrity="sha384-G8oDligKJ0/Zuaer1dZfpMa35oQQEi1DNWYXjmSxmteeveZg6dhzTUuG8M8XnEK9"
+  src="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.4.0/dist/embed.js"
 ></script>
+
+<formbrew-form token="YOUR_PUBLIC_FORM_TOKEN"></formbrew-form>
 ```
 
-The script inserts the form beside itself and loads a version-matched stylesheet. Keep the exact package version and integrity hash together; do not replace the version with `latest` or `beta`.
+- The script can load before or after the elements.
+- One page can contain several `<formbrew-form>` elements.
+- The script also loads its version-matched stylesheet.
+- The website origin must be an [allowed origin](/integrations/public-access#allowed-origins) for the form.
 
-## Render into another element
+Keep the exact package version and integrity hash together. Do not replace the version with a range or a dist-tag such as `latest`. When you upgrade, update the URL and the integrity value at the same time.
 
-```html
-<div id="contact-form"></div>
+| Version | Script URL | Integrity |
+| --- | --- | --- |
+| `0.4.0` | `https://cdn.jsdelivr.net/npm/@formbrew/embed@0.4.0/dist/embed.js` | `sha384-G8oDligKJ0/Zuaer1dZfpMa35oQQEi1DNWYXjmSxmteeveZg6dhzTUuG8M8XnEK9` |
 
-<script
-  crossorigin="anonymous"
-  defer
-  integrity="sha384-iTXCBbm6ZFJtVjznaAtvkZ1QX0PY7m+ZZL4nECY+PN0Tpo3siEhbwW5BJe+WWot9"
-  src="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.1.0-beta.1/dist/embed.js"
-  data-formbrew-token="YOUR_PUBLIC_TOKEN"
-  data-formbrew-target="#contact-form"
-></script>
-```
+## Element attributes
+
+| Attribute | Purpose |
+| --- | --- |
+| `token` | Required public form token. |
+| `base-url` | Optional Public API base URL. Defaults to `https://api.formbrew.com/v1`. |
+| `data-formbrew-state` | Read-only state set by the element: `loading`, `ready`, or `error`. |
+
+Changing `token` or `base-url` reloads the form. Removing the element from the page aborts its active request and destroys the form. Adding it back renders the form again. This lets frameworks that create and remove elements, such as client-side routers, use the element directly.
+
+A missing `token` renders an error message in the element and emits `formbrew:error` with a `ConfigurationError`.
 
 ## Script attributes
 
 | Attribute | Purpose |
 | --- | --- |
-| `data-formbrew-token` | Public token used for declarative auto-mounting. |
-| `data-formbrew-base-url` | Overrides the production API base URL. |
-| `data-formbrew-target` | CSS selector for an existing mount element. |
-| `data-formbrew-auto-mount="false"` | Loads the global API without creating a form automatically. |
 | `data-formbrew-styles="false"` | Prevents automatic stylesheet loading. |
-| `data-formbrew-styles-url` | Loads styles from a custom URL. |
+| `data-formbrew-styles-url` | Loads styles from a custom URL instead of the version-matched stylesheet. |
+
+If you disable automatic styles, keep the honeypot visually hidden. The stylesheet hides it with the `.fb-honeypot` class. You can load the same stylesheet yourself with Subresource Integrity:
+
+```html
+<link
+  crossorigin="anonymous"
+  href="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.4.0/dist/styles.css"
+  integrity="sha384-NkoQWlLBtZtH5/3M6oIv6fu/w3aTwIPrLMh74tDj933AUk4wIK39Qd9wh0NbKWwM"
+  rel="stylesheet"
+/>
+```
 
 ## Listen for events
 
-Auto-mounted forms emit bubbling lifecycle events:
+Each `<formbrew-form>` element emits bubbling lifecycle events. `event.target` is the element that emitted the event.
 
 ```js
 document.addEventListener("formbrew:ready", (event) => {
@@ -64,45 +75,61 @@ document.addEventListener("formbrew:success", (event) => {
 });
 
 document.addEventListener("formbrew:error", (event) => {
-  console.error(event.detail.phase, event.detail.error);
+  console.error(event.detail.phase, event.detail.error.code, event.detail.error.message);
 });
 ```
 
-The error `phase` is either `load` or `submit`.
+| Event | `detail` |
+| --- | --- |
+| `formbrew:ready` | `definition` and `controller` |
+| `formbrew:success` | `result` (`id` and `message`) and `controller` |
+| `formbrew:error` | `error` (a `FormbrewError`) and `phase`, either `load` or `submit` |
+
+The controller exposes `reset()` and `destroy()`. A failed load sets `data-formbrew-state="error"` and does not emit `formbrew:ready`.
 
 ## Imperative rendering
 
-Disable auto-mounting when your application controls when the form appears:
+Call the `Formbrew.render()` global when your code controls where and when the form appears, or when you need to attach submission metadata. Because the script uses `defer`, wait for `DOMContentLoaded`:
 
 ```html
 <div id="contact-form"></div>
-<script
-  crossorigin="anonymous"
-  integrity="sha384-iTXCBbm6ZFJtVjznaAtvkZ1QX0PY7m+ZZL4nECY+PN0Tpo3siEhbwW5BJe+WWot9"
-  src="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.1.0-beta.1/dist/embed.js"
-  data-formbrew-auto-mount="false"
-></script>
+
 <script>
-  Formbrew.render("#contact-form", {
-    baseUrl: "https://api.staging.formbrew.com/v1",
-    token: "YOUR_PUBLIC_TOKEN",
-    metadata: { source: window.location.pathname },
-    onSuccess(result) {
-      console.log(result.message);
-    },
-  }).then((controller) => {
-    // Store the controller if this view later needs reset() or destroy().
-    window.contactForm = controller;
+  document.addEventListener("DOMContentLoaded", () => {
+    Formbrew.render("#contact-form", {
+      token: "YOUR_PUBLIC_FORM_TOKEN",
+      metadata: () => ({ source: window.location.pathname }),
+      onSuccess(result) {
+        console.log(result.message);
+      },
+      onError(error) {
+        console.error(error.code, error.message);
+      },
+    }).then((controller) => {
+      // Keep the controller if this view later needs reset() or destroy().
+      window.contactForm = controller;
+    });
   });
 </script>
 ```
 
+`Formbrew.render(target, options)` accepts a CSS selector or an element. Its options are `token`, `baseUrl`, `metadata`, `onSuccess`, `onError`, and `signal`. It returns a promise that resolves to the controller.
+
+Imperative rendering does not emit `formbrew:*` events. Use the callbacks instead:
+
+- `onError` runs for submission errors.
+- A load failure rejects the returned promise and shows an error message in the target.
+
+The `<formbrew-form>` element does not accept metadata. Use `Formbrew.render()` or a Hidden field when you need to record integration context.
+
+TypeScript projects that call the browser global can install `@formbrew/embed` as a development dependency and add `import type {} from "@formbrew/embed/global";` for its declarations.
+
 ## Theme the form
 
-Override Formbrew CSS variables on the form's container:
+Override Formbrew CSS variables on the generated form:
 
 ```css
-#contact-form .fb-form {
+formbrew-form .fb-form {
   --fb-accent: #176247;
   --fb-accent-strong: #0f4d38;
   --fb-border: #c9d8d1;
@@ -115,12 +142,24 @@ Override Formbrew CSS variables on the form's container:
 }
 ```
 
+The generated markup uses stable `fb-*` class names. For imperative rendering, scope the variables to your target element, such as `#contact-form .fb-form`.
+
 ## Content Security Policy
 
-A strict CSP must allow:
+A strict Content Security Policy must allow:
 
-- The exact jsDelivr URL under `script-src`.
-- The package stylesheet or your override under `style-src`.
-- `https://api.staging.formbrew.com` under `connect-src`.
+| Directive | Source |
+| --- | --- |
+| `script-src` | `https://cdn.jsdelivr.net/npm/@formbrew/embed@0.4.0/dist/embed.js` or `https://cdn.jsdelivr.net` |
+| `style-src` | `https://cdn.jsdelivr.net/npm/@formbrew/embed@0.4.0/dist/styles.css`, `https://cdn.jsdelivr.net`, or your custom stylesheet URL |
+| `connect-src` | `https://api.formbrew.com` |
 
-The loader copies its script nonce to the generated stylesheet link.
+If the script tag has a `nonce`, the loader copies it to the stylesheet link it inserts. The automatically inserted stylesheet link has no `integrity` attribute. To pin the stylesheet with Subresource Integrity, set `data-formbrew-styles="false"` and add the stylesheet link shown above.
+
+Imperative rendering also needs a way to run your inline call to `Formbrew.render()`, such as a nonce or a script file allowed by `script-src`.
+
+## Limitations
+
+- The embed does not support file uploads.
+- After a successful submission, the form shows the configured success message in place. There is no redirect option.
+- `<formbrew-form>` has no metadata attribute.

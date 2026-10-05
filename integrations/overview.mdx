@@ -3,9 +3,7 @@ title: "Frontend integrations"
 description: "Choose the best way to add a Formbrew form to your website or application."
 ---
 
-# Frontend integrations
-
-Every integration uses the same published form definition, validation rules, public token, origin checks, and submission API. Choose an integration based on how much rendering and state you want Formbrew to manage.
+Every integration uses the same published form definition, validation rules, public form token, allowed-origin checks, and submission API. Choose an integration based on your framework and on how much rendering and state you want Formbrew to manage.
 
 <CardGroup cols={2}>
   <Card title="Hosted embed" icon="bolt" href="/integrations/embed">
@@ -22,27 +20,58 @@ Every integration uses the same published form definition, validation rules, pub
   </Card>
 </CardGroup>
 
+## Choose by framework
+
+| Your project | Recommended integration |
+| --- | --- |
+| React 18.2 or React 19, including Next.js, Remix, and Vite | [`@formbrew/react`](/integrations/react) |
+| Vue, Nuxt, Svelte, SvelteKit, Angular, Astro, or vanilla JavaScript with a bundler | [`@formbrew/js`](/integrations/javascript), or the [hosted embed](/integrations/embed) |
+| A static site, CMS template, or page without a JavaScript build | [Hosted embed](/integrations/embed) or [plain HTML](/integrations/html) |
+| Your own form renderer or design system | [Custom rendering](/integrations/custom-rendering) with `@formbrew/js` or React hooks |
+| A server-side workflow | The [Public API](/api-reference/public-requests) or the headless `@formbrew/js` client with an explicit origin |
+
+There are no dedicated Vue, Svelte, Angular, Astro, or mobile packages. Those projects use the hosted embed, the `@formbrew/js` DOM renderer, the headless client, or the public HTTP API.
+
 ## Compare methods
 
 | Capability | Embed | HTML | JavaScript | React | Raw API |
 | --- | --- | --- | --- | --- | --- |
 | Build step | No | No | Yes | Yes | Optional |
 | Formbrew renders fields | Yes | No | Optional | Optional | No |
-| Loads current definition | Yes | Optional | Yes | Yes | You decide |
+| Loads current definition | Yes | No | Yes | Yes | You decide |
 | Managed browser validation | Yes | Basic HTML only | Yes with DOM renderer | Yes with managed form | No |
 | Managed success and error UI | Yes | No | Yes with DOM renderer | Yes with managed form | No |
 | Full markup control | CSS-level | Yes | Yes with headless client | Yes with hooks or slots | Yes |
 
-## Recommendations
+The plain HTML integration uses markup generated from the form at the time you copy it. Copy it again after you change fields or choice options.
 
-- Choose **Hosted embed** when speed and low maintenance matter most.
-- Choose **Plain HTML** for progressive enhancement or sites without a JavaScript build.
-- Choose **JavaScript SDK** for Vue, Svelte, Astro, vanilla JavaScript, and framework-neutral applications.
-- Choose **React SDK** for React 18.2 or React 19 applications.
-- Choose **Raw API** when you already have a form renderer or need a server-side workflow.
+## Package versions
 
-There are no dedicated Vue, Svelte, Angular, Astro, or mobile packages yet. Those clients can use the hosted embed, DOM renderer, headless JavaScript client, or public HTTP API.
+Formbrew releases `@formbrew/js`, `@formbrew/react`, and `@formbrew/embed` together with the same version number. The current release is `0.4.0`.
+
+Forms that use Date/Time, Hidden, Confirm, or Content fields, multiline Text, or Number sign and decimal-precision settings require version `0.4.0`. Earlier versions cannot load those definitions; for example, `0.3.0` rejects them with an `InvalidResponse` error. The npm packages require Node.js 20 or later for server-side use.
+
+## Rendering location
+
+Managed renderers need a browser DOM:
+
+- Mount the `@formbrew/js` DOM renderer or the hosted embed only in client-side code, after the target element exists.
+- Destroy managed forms when your framework removes the view.
+- Use the headless client on a server only with an explicit `origin`.
+- The React package is client component code. See [SSR and client boundaries](/integrations/react#ssr-and-client-boundaries).
+
+## Content Security Policy
+
+If your site sends a Content Security Policy, allow the sources your integration uses:
+
+| Integration | Required sources |
+| --- | --- |
+| Hosted embed | The jsDelivr script and stylesheet, and `https://api.formbrew.com` in `connect-src`. See [embed CSP](/integrations/embed#content-security-policy). |
+| JavaScript and React SDKs | `https://api.formbrew.com` in `connect-src` |
+| Plain HTML | `https://api.formbrew.com` in `form-action`, plus `connect-src` for progressive enhancement. See [origin and CSP](/integrations/html#origin-and-content-security-policy). |
 
 <Note>
-  None of these methods bypass backend validation. The public API is authoritative even when the browser performs immediate validation.
+  None of these methods bypass backend validation. The Public API is authoritative even when the browser performs immediate validation.
 </Note>
+
+Before you integrate, read [tokens and origins](/integrations/public-access). If a form does not load or submit, see [troubleshooting](/integrations/troubleshooting).

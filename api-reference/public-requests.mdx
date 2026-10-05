@@ -3,19 +3,19 @@ title: "Public API requests"
 description: "Request formats, origin headers, validation, errors, and rate limits for the Public API."
 ---
 
-# Public API requests
-
 ## Request origin
 
-Both form endpoints require an allowed website origin.
+Both form endpoints check the request origin against the form's allowed origins.
 
-1. If `Origin` is present, it is authoritative.
+1. If the request has an `Origin` header, Formbrew uses it.
 2. If `Origin` is absent, Formbrew uses the origin portion of `Referer`.
-3. The normalized value must exactly match the form's allowed-origin list.
+3. The resulting origin must exactly match one of the form's allowed origins.
 
-`Origin: null`, malformed origins, and non-HTTP(S) origins are rejected. Non-browser callers should send `Origin` explicitly.
+Formbrew rejects `Origin: null`, malformed origins, origins that include a path, and non-HTTP(S) origins with `403`. If you call the API from a server or another non-browser client, send an `Origin` header that matches an allowed origin.
 
 ## Submission content types
+
+The submit endpoint accepts `application/json`, `application/x-www-form-urlencoded`, and `multipart/form-data`. It rejects other content types and request bodies larger than 1 MiB.
 
 ### JSON
 
@@ -33,12 +33,12 @@ Use the canonical envelope:
 }
 ```
 
-`values` is required. `metadata` is optional. Unknown top-level properties and direct values objects are rejected.
+`values` is required and must be an object. `metadata` is optional and must be an object when present. Formbrew rejects any other top-level property, so send field values inside `values`, not at the top level.
 
 ### URL-encoded
 
 ```bash
-curl 'https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN/submit' \
+curl 'https://api.formbrew.com/v1/forms/YOUR_PUBLIC_FORM_TOKEN/submit' \
   --header 'Content-Type: application/x-www-form-urlencoded' \
   --header 'Origin: https://www.example.com' \
   --data-urlencode 'email=hello@example.com' \
@@ -47,23 +47,27 @@ curl 'https://api.staging.formbrew.com/v1/forms/YOUR_PUBLIC_TOKEN/submit' \
   --data-urlencode '_source=pricing-page'
 ```
 
-Repeated names become arrays. Names beginning with `_` become metadata keys with one leading underscore removed.
+Repeated names become arrays. Names that begin with `_` become metadata keys with one leading underscore removed, so `_source` becomes the `source` metadata key.
 
 ### Multipart
 
-`multipart/form-data` follows the same flat-field rules as URL-encoded input. Text fields are accepted; file parts are rejected.
+`multipart/form-data` follows the same rules as URL-encoded input. Formbrew accepts text parts and rejects file parts with `400` because file uploads aren't supported.
+
+### Responses to HTML form posts
+
+The API responds with JSON for every content type, including native HTML form posts. It doesn't redirect after a submission. To keep visitors on your page, see [Plain HTML](/integrations/html).
 
 ## Validation
 
-The API applies the current published form definition:
+Formbrew validates values against the current published form definition:
 
-- Unknown keys are rejected.
-- Required values are enforced.
-- Length, email, number, integer, range, URL, and HTTPS rules are enforced.
-- Choice values must be active options.
-- Duplicate checkbox-group selections are rejected.
-- Checkbox-group minimum and maximum counts are enforced.
-- A non-empty honeypot is rejected with a generic message.
+- Formbrew rejects unknown field keys.
+- Formbrew enforces required values.
+- Formbrew enforces type rules, including length, email, number, integer, range, URL, HTTPS, and date and time formats.
+- Choice values must match one of the field's current options.
+- Checkbox-group selections must be unique and within the field's minimum and maximum counts.
+- Confirmation fields must match their target field.
+- Formbrew rejects a non-empty honeypot field with a generic message.
 
 See [Fields](/dashboard-guide/fields) for each field's value and validation behavior.
 
@@ -73,24 +77,34 @@ See [Fields](/dashboard-guide/fields) for each field's value and validation beha
 {
   "error": "ValidationError",
   "message": "Email must be a valid email address.",
-  "details": []
+  "requestId": "3ce11e0f-a68a-4130-8d31-b925903efa1f"
 }
 ```
 
-`details` is optional and is most commonly present for request-schema failures.
+- `error` is a machine-readable error code, such as `ValidationError`, `Forbidden`, or `RateLimitExceeded`.
+- `message` is a human-readable explanation.
+- `requestId` identifies the request. Every response also returns it in the `X-Request-ID` header.
+- `details` is optional. Request-schema failures include it with the failing properties.
+
+Errors that occur while reading the body use the same envelope with a framework error code, for example `FST_ERR_CTP_INVALID_JSON_BODY` for malformed JSON. A request to a path that doesn't exist returns `404` with a different body that contains `error`, `message`, and `statusCode`.
+
+{/* docs-check: production-setting billing.quota-enforcement */}
 
 | Status | Typical meaning |
 | --- | --- |
-| `400` | Invalid body, form value, metadata, honeypot, or unsupported file input |
-| `401` | Token is revoked or expired |
-| `403` | Origin is missing, malformed, or not allowed |
-| `404` | Token is unknown or form is not published |
+| `400` | Invalid or malformed body, invalid form values or metadata, a filled honeypot, or a file part |
+| `401` | The public form token is revoked or expired |
+| `402` | The workspace has reached its monthly submission limit (submissions only) |
+| `403` | The origin is missing, malformed, or not allowed |
+| `404` | The token is unknown, the form isn't published or is unavailable, or the path doesn't exist |
+| `409` | The form changed while the submission was processed (submissions only); fetch the definition and try again |
+| `413` | The request body is larger than 1 MiB |
 | `415` | Unsupported request content type |
-| `429` | Public request limit exceeded |
-| `500` | Unexpected error or invalid persisted form configuration |
-| `503` | Public rate limiter is unavailable |
+| `429` | A rate limit was exceeded |
+| `500` | Unexpected error or invalid form configuration |
+| `503` | Rate limiting is temporarily unavailable |
 
-Framework-level errors such as malformed JSON or unsupported content types may include Fastify's default error properties in addition to, or instead of, the normal contract envelope.
+For client-side handling, see [Submissions and errors](/integrations/submissions-and-errors).
 
 ## Rate limits
 
@@ -102,8 +116,8 @@ Framework-level errors such as malformed JSON or unsupported content types may i
 | Submit | Form and client IP | 100 per hour |
 | Submit | Form | 1,000 per hour |
 
-The API does not currently return `Retry-After`, remaining, or reset headers.
+Limits use fixed one-minute and one-hour windows. The API doesn't return `Retry-After` or rate-limit headers, so wait before you retry a `429` response.
 
 ## CORS
 
-The public surface supports `GET`, `POST`, and preflight `OPTIONS`, allows the `Content-Type` request header, and does not use cookies or credentialed CORS. CORS approval is separate from the form-specific origin check.
+The Public API accepts cross-origin `GET` and `POST` requests and `OPTIONS` preflights from any HTTP or HTTPS origin. It allows the `Content-Type` request header, exposes the `X-Request-ID` response header, and doesn't use cookies or credentialed CORS. Passing CORS doesn't mean a form accepts the origin; the allowed-origin check still applies.

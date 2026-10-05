@@ -1,25 +1,40 @@
 ---
 title: "Use the form builder"
-description: "Add, edit, resize, and reorder fields in the visual form builder."
+description: "Add, edit, arrange, and save fields in the visual form builder."
 ---
 
-# Use the form builder
-
-The layout editor has three working areas:
+Open a form and select **Layout** to use the builder. The builder has these working areas:
 
 | Area | Purpose |
 | --- | --- |
-| Field palette | Add a Text, Email, Number, Phone, Website, Checkbox, Checkbox group, or Radio group field. |
-| Preview | Review the layout, select fields, and drag fields into a new order. |
-| Properties | Edit the selected field, or edit form settings when no field is selected. |
+| Preview | Review the layout, select fields, and drag fields into rows. |
+| Hidden fields | List and reorder Hidden fields, which visitors do not see. |
+| Available fields | Add any of the 13 [field types](/dashboard-guide/fields). |
+| Edit field or Settings | Edit the selected field, or edit [form settings](/dashboard-guide/forms#form-settings) when no field is selected. |
 
-On smaller screens these areas stack vertically and all field widths render as full width.
+On smaller screens, **Available fields** and the settings panel appear below the preview.
+
+## Save your changes
+
+The builder keeps every change as a draft until you save it. This includes new fields, field settings, layout changes, deletions, and form settings.
+
+Select **Save changes** at the top of the page, or press ⌘S on macOS or Ctrl + S on other systems. If you try to leave the page with unsaved changes, the dashboard asks you to confirm.
+
+When a save fails validation, the builder selects the first field with an error and shows each error next to its setting. Fix the errors and save again.
+
+<Warning>
+  Saved changes to a published form are live immediately. There is no separate publish step for edits.
+</Warning>
+
+If someone else saves the form while you edit it, Formbrew rejects your save. Reload the page to load their changes, then apply your edits again.
 
 ## Add and select fields
 
-Select a field in the palette to append it to the form. New fields use the label **Untitled field**, are optional, and span the full form width. The new field is selected automatically so you can configure it in the properties panel.
+Select a field type under **Available fields** to add it to the end of the form. The builder adds Hidden fields to the **Hidden fields** section instead.
 
-Select a field in the preview to edit it. Select blank preview space to return to form settings.
+A new field uses its type name as the label, for example **Email**. It is optional, and the builder selects it automatically so you can configure it.
+
+Select a field in the preview to edit it. Select blank preview space, or the preview submit button, to return to form settings.
 
 ## Field keys
 
@@ -31,33 +46,37 @@ The field key is the property name stored in each submission and sent to integra
 }
 ```
 
-Formbrew derives the initial key from the label, lowercases it, and uses underscores between words. Duplicate keys receive a suffix such as `_2`.
+Formbrew derives the initial key from the label. It lowercases the label, replaces spaces with underscores, and removes characters other than letters, numbers, underscores, and hyphens. When another field in the form already uses the key, Formbrew adds a suffix such as `_1`.
 
-While the key still matches the generated value, changing the label updates the key too. After you customize the key, later label changes preserve it.
+While the key still matches the value generated from the label, changing the label updates the key too. After you customize the key, later label changes keep it.
 
 <Warning>
   Changing a key changes the submission contract. Update custom frontend code and downstream webhook consumers before changing keys on a published form.
 </Warning>
 
-## Widths
+## Arrange fields in rows
 
-Fields support four responsive widths:
+Drag a field in the preview to move it.
 
-| Width | Desktop span |
-| --- | --- |
-| Full | Entire row |
-| Half | One half |
-| Third | One third |
-| Two thirds | Two thirds |
+- Drop it between rows to place it on its own row.
+- Drop it next to another field to place both fields in the same row.
 
-Managed JavaScript, React, and embed forms switch these layouts to full width on narrow screens.
+A row can contain up to five fields. Fields in a row share the row width equally in the preview.
 
-## Reorder and delete
+<Note>
+  The hosted embed and the managed JavaScript and React renderers currently show each field on its own full-width line. They follow the builder order: rows from top to bottom, and fields in a row from left to right.
+</Note>
 
-Drag fields in the preview to change their order. Layout changes save immediately. Field width is preserved when a field moves.
+## Delete fields
 
-Select **Delete field** in the properties panel to remove a field. Deletion is immediate and has no confirmation dialog.
+Select **Delete field** in the **Edit field** panel to remove the selected field from your draft. Formbrew deletes the field when you save.
+
+You cannot delete a field while a Confirm field targets it. Retarget or delete the Confirm field first.
 
 ## Preview limitations
 
-The builder preview is for layout editing, not test submissions. Controls are read-only, the preview button does not submit, and backend validation does not run. Test the final behavior through a real integration on an allowed origin.
+The builder preview is for layout editing, not test submissions. Controls are read-only, the preview button does not submit, and server-side validation does not run. Test the final behavior through a real integration on an allowed origin.
+
+## Forms the builder cannot edit
+
+If a form contains a field type or setting that the builder cannot edit, **Layout** shows **This form can't be edited here yet** and lists the affected fields. Formbrew does not change the form. The form keeps working for visitors.

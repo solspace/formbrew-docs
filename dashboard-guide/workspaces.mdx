@@ -1,0 +1,85 @@
+---
+title: "Workspaces"
+description: "Create, switch between, rename, delete, and restore workspaces."
+---
+
+A workspace holds forms and everything that belongs to them, including submissions, public form tokens, and webhooks. Each workspace has its own members, plan, usage, and [management tokens](/dashboard-guide/agent-access) for coding agents.
+
+Every workspace has a name and a unique slug. The slug is part of each dashboard URL, for example `https://formbrew.com/dashboard/acme/forms`.
+
+## Get started
+
+Formbrew does not create a workspace when you first sign in. If you have no workspace yet, the dashboard opens **Get started**. Create a workspace there, or accept an invitation from another workspace.
+
+## Create a workspace
+
+Select **Create workspace** in the workspace switcher, or on the dashboard home page at `https://formbrew.com/dashboard`.
+
+| Setting | Rule |
+| --- | --- |
+| Workspace name | 1 to 100 characters. Names do not need to be unique. |
+| Workspace URL | 3 to 48 lowercase letters, numbers, and single hyphens. The slug must be unique across Formbrew. |
+
+Formbrew suggests a slug from the name and checks that it is available. Some slugs are reserved, such as `account`, `admin`, and `forms`.
+
+Select **Create workspace**. The new workspace opens on its **Forms** page. New workspaces start on the Free plan.
+
+## Workspace membership limit
+
+You can belong to up to 25 workspaces. This count includes workspaces you own or joined, suspended memberships, and workspaces pending deletion. Pending invitations do not count.
+
+When you reach the limit, **Create workspace** is unavailable, and you cannot accept invitations. Leave a workspace first, or select **Contact us to raise your limit**.
+
+## Switch workspaces
+
+Select the workspace switcher in the header to see your workspaces. It lists the current workspace first, then recently used workspaces, then the rest alphabetically. It also shows pending invitations, suspended memberships, and workspaces pending deletion.
+
+Select a workspace to open it.
+
+- On **Usage** or **Subscriptions**, you stay on the same page in the new workspace.
+- On workspace settings, you stay on settings if you are an owner or admin of the new workspace.
+- On every other page, including form pages, you go to the new workspace's **Forms** page.
+
+The workspace is part of the page URL, so different browser tabs can show different workspaces.
+
+The dashboard home page at `https://formbrew.com/dashboard` lists all your workspaces and invitations. If you belong to exactly one workspace, it opens that workspace directly.
+
+## Change the name or slug
+
+Owners and admins can change workspace settings. Open the menu with your name at the bottom of the sidebar. Then select the **Settings for** item that shows the workspace name.
+
+Under **General**, edit **Workspace name** or **Workspace slug**, then select **Save settings**. Changing the name does not change the slug.
+
+Workspace settings also contain **Agent access**, where owners and admins create management tokens for coding agents. See [Agent access](/dashboard-guide/agent-access).
+
+<Warning>
+  Changing the slug changes every dashboard URL for the workspace. Old links show **Page not found**, and nobody can claim the old slug for 24 hours. Tabs that are already open keep working.
+</Warning>
+
+Changing the slug does not affect published forms, public form tokens, management tokens, or webhooks.
+
+## Delete a workspace
+
+Only the owner can delete a workspace.
+
+1. Open workspace settings.
+2. Under **Delete workspace**, type the workspace name exactly as shown.
+3. Select **Delete workspace**.
+
+Deletion takes effect immediately:
+
+- Members can no longer open the workspace's forms, submissions, or settings.
+- Published forms stop loading and stop accepting submissions. Public requests receive a not found response.
+- Formbrew cancels queued and retrying webhook deliveries.
+
+Formbrew permanently deletes the workspace, its forms, submissions, and settings 30 days later. Until then, the workspace still counts toward each member's [membership limit](#workspace-membership-limit). Members other than the owner can leave it.
+
+## Restore a workspace
+
+The owner can restore a workspace before its permanent deletion date.
+
+1. Open the workspace from the switcher or the dashboard home page. The dashboard labels workspaces pending deletion **Deleting**.
+2. Type the workspace name exactly as shown.
+3. Select **Restore workspace**.
+
+Restoring brings back access to the workspace and its forms. Formbrew does not resend webhook deliveries that it canceled during deletion.

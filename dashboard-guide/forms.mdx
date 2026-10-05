@@ -3,48 +3,62 @@ title: "Manage forms"
 description: "Create, configure, publish, and archive forms in the Formbrew dashboard."
 ---
 
-# Manage forms
+The **Forms** page lists every draft and published form in the current workspace, newest first. Each row shows the form name, status, field count, and when the form was last updated.
 
-The **Forms** page lists every active draft and published form in your workspace. Each card shows the form name, status, field count, and actions to edit or archive it.
+Owners, admins, and editors can create, change, publish, and archive forms. Viewers can open forms but cannot save changes. See [Members and roles](/dashboard-guide/members).
 
 ## Create a form
 
-Select **New form**. Formbrew immediately creates a draft and opens its layout editor. There is no setup dialog, so configure the form in the settings panel after it opens.
+Select **New form**. Formbrew immediately creates an **Untitled form** draft and opens it in the [form builder](/dashboard-guide/form-builder). There is no setup dialog, so configure the form in the **Settings** panel after it opens.
 
 ## Form settings
 
-Click an empty area of the preview, or click the preview submit button, to show form settings.
+In the builder, select an empty area of the preview, or the preview submit button, to show the **Settings** panel.
 
 | Setting | What it controls |
 | --- | --- |
-| Name | The internal and public form name. It is required. |
-| Slug | A workspace-unique, URL-friendly identifier. Formbrew lowercases it and replaces unsupported characters with hyphens. |
-| Status | `Draft` prevents public access. `Published` enables the public definition and submission endpoints. |
-| Submit button | The label used by managed Formbrew renderers. An empty value becomes `Submit`. |
-| Honeypot input name | The anti-spam field name used by managed and manual forms. |
-| Success message | The message returned after an accepted submission. |
+| Name | The form name. It is required, and the public form definition includes it. |
+| Slug | A URL-friendly identifier that is unique in the workspace. Formbrew lowercases it and replaces other characters with hyphens. |
+| Status | **Draft** prevents public access. **Published** lets allowed websites fetch and submit the form. |
+| Submit button | The button label used by managed Formbrew forms. An empty value becomes `Submit`. |
+| Honeypot input name | The name of the hidden anti-spam input. |
+| Success message | The message returned after an accepted submission. An empty value becomes `Thanks for your submission.` |
 
-The honeypot name must start with `_`, contain 4 to 80 letters, numbers, underscores, or hyphens, and must not collide with a normal field key.
+Select **Save changes** to save form settings together with any field changes.
+
+If another form in the workspace already uses the slug, Formbrew adds a suffix such as `-2`.
 
 <Note>
   Editing the form name in the dashboard also regenerates its slug. Set the final name first, then customize the slug if needed.
 </Note>
 
+## Honeypot input
+
+The honeypot is a text input that people do not see but spam bots often fill in. Formbrew rejects any submission where the honeypot has a value. It does not store rejected submissions.
+
+Managed Formbrew forms add the honeypot input automatically. For a plain HTML form, add a visually hidden text input with the honeypot name. Do not use `type="hidden"`, and keep the input empty.
+
+The honeypot name must start with `_` and contain 4 to 80 letters, numbers, underscores, or hyphens. Choose a name that is not also a field key.
+
 ## Draft and published forms
 
-Draft forms cannot be fetched or submitted through the public API. To publish a form:
+You cannot fetch or submit draft forms through the Public API. To publish a form:
 
-1. Add at least one allowed origin under **Public access**.
-2. Make sure every field has valid settings.
+1. Save at least one allowed origin in **Public access**.
+2. Open **Layout** and select an empty area of the preview to show **Settings**.
 3. Set **Status** to **Published**.
-4. Select **Save**.
+4. Select **Save changes**.
 
-A form can remain published while you edit fields, labels, validation, button text, and success text. Integrations fetch the current definition, so saved changes can affect visitors immediately.
+**Published** stays unavailable until the form has a saved allowed origin. Every field must also have valid settings.
+
+A form can stay published while you edit fields, labels, validation, button text, and success text. Integrations fetch the current definition, so saved changes can affect visitors immediately.
 
 ## Archive a form
 
-Select **Archive** on a form card to remove it from the active list and disable normal management access. Archiving is immediate, with no confirmation or restore workflow in the current dashboard.
+Open the actions menu on a form row and select **Archive**. Confirm with **Archive form**.
+
+Archiving removes the form from the **Forms** page and stops public access. Formbrew keeps existing submissions, but you can no longer open the form or its submissions in the dashboard.
 
 <Warning>
-  Treat archive as irreversible from the dashboard. Make sure you no longer need to manage the form before archiving it.
+  There is currently no way to restore an archived form. Make sure you no longer need to manage the form or review its submissions before archiving it.
 </Warning>
