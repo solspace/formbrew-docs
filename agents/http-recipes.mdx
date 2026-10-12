@@ -3,7 +3,7 @@ title: "Create and edit forms over HTTP"
 description: "Request-by-request recipes for agents that manage Formbrew forms with a management token."
 ---
 
-These recipes use raw HTTP with a [management token](/agents/managed-mode). They assume the user has approved the plan: the fields, the allowed origins, and whether to publish.
+These recipes use raw HTTP with a [management token](/agents/managed-mode). They assume the user has approved the plan: the fields, the allowed origins, and any status change.
 
 Set the credentials as environment variables in the agent's secure configuration, not in the conversation:
 
@@ -19,9 +19,9 @@ curl "$FORMBREW_API/management-tokens/current" \
   --header "Authorization: Bearer $FORMBREW_MANAGEMENT_TOKEN"
 ```
 
-The response contains the token's workspace in `data.workspace` and its permissions in `data.access`. Creating and publishing a form needs `data.access.createForms.enabled` to be `true` and these new-form actions: `forms:read`, `forms:edit`, `forms:origins`, `forms:publish`, and `tokens:create`. If anything is missing, tell the user which permissions the token needs instead of trying other routes.
+The response contains the token's workspace in `data.workspace` and its permissions in `data.access`. Creating and integrating a form needs `data.access.createForms.enabled` to be `true` and these new-form actions: `forms:read`, `forms:edit`, `forms:origins`, and `tokens:create`. Deactivating or activating it later needs `forms:activate`. If anything is missing, tell the user which permissions the token needs instead of trying other routes.
 
-## Create, publish, and integrate a form
+## Create and integrate a form
 
 ### 1. Create the form
 
@@ -37,7 +37,7 @@ curl "$FORMBREW_API/forms" \
   --data '{ "name": "Contact" }'
 ```
 
-Record `data.id`, `data.schemaVersion`, and `data.status` from the `201` response. A new form is a draft without fields.
+Record `data.id`, `data.schemaVersion`, and `data.status` from the `201` response. A new form is active and has no fields. Websites can't load it until it has an allowed origin and a public form token, so add the fields first.
 
 ### 2. Add the fields
 
@@ -51,7 +51,7 @@ curl "$FORMBREW_API/forms/FORM_ID/definition" \
   --header "Content-Type: application/json" \
   --data '{
     "expectedSchemaVersion": 1,
-    "expectedStatus": "DRAFT",
+    "expectedStatus": "ACTIVE",
     "form": { "name": "Contact" },
     "fields": [
       { "clientId": "name", "fieldId": null, "rowIndex": 0, "columnIndex": 0,
@@ -64,7 +64,7 @@ curl "$FORMBREW_API/forms/FORM_ID/definition" \
   }'
 ```
 
-Keep `form.status` out of the request, or set it to `expectedStatus`, unless you intend to publish or unpublish. Changing the status in a definition save requires `forms:publish`.
+Keep `form.status` out of the request, or set it to `expectedStatus`, unless you intend to change the status. Changing the status in a definition save requires `forms:activate`, or `forms:archive` for `ARCHIVED`.
 
 ### 3. Set the allowed origins
 
@@ -81,20 +81,7 @@ curl "$FORMBREW_API/forms/FORM_ID/origins" \
 
 This replaces the whole list.
 
-### 4. Publish the form
-
-```bash
-curl "$FORMBREW_API/forms/FORM_ID" \
-  --request PATCH \
-  --header "Authorization: Bearer $FORMBREW_MANAGEMENT_TOKEN" \
-  --header "X-Workspace-ID: $FORMBREW_WORKSPACE_ID" \
-  --header "Content-Type: application/json" \
-  --data '{ "status": "PUBLISHED" }'
-```
-
-Publishing requires at least one allowed origin and valid fields.
-
-### 5. Create a public form token
+### 4. Create a public form token
 
 Use a second idempotency key:
 
@@ -110,9 +97,9 @@ curl "$FORMBREW_API/forms/FORM_ID/tokens" \
 
 `data.tokenValue` is the public form token that starts with `fbf_`. It is publishable and can go in browser code. The management token can't.
 
-### 6. Integrate and check
+### 5. Integrate and check
 
-Add the form to the website with the [integration for its framework](/agents#choose-the-integration). Then [check the published definition with curl](/integrations/troubleshooting#check-the-definition-with-curl) by using the public form token and an allowed origin. Never send the management token in that request.
+Add the form to the website with the [integration for its framework](/agents#choose-the-integration). Then [check the public definition with curl](/integrations/troubleshooting#check-the-definition-with-curl) by using the public form token and an allowed origin. Never send the management token in that request.
 
 Don't submit test data. Report which checks you ran and which you didn't: curl proves only that the definition is available to that origin, not that the form renders or that submissions and notifications work.
 
@@ -131,7 +118,7 @@ curl "$FORMBREW_API/forms/FORM_ID/definition" \
   --header "Content-Type: application/json" \
   --data '{
     "expectedSchemaVersion": 4,
-    "expectedStatus": "PUBLISHED",
+    "expectedStatus": "ACTIVE",
     "form": { "name": "Contact" },
     "fields": [
       { "clientId": "name", "fieldId": "fld_EXISTING_NAME", "rowIndex": 0, "columnIndex": 0,
@@ -144,18 +131,35 @@ curl "$FORMBREW_API/forms/FORM_ID/definition" \
   }'
 ```
 
-Send each field's complete settings, not only the changed ones: the definition replaces the field list. A published form stays published.
+Send each field's complete settings, not only the changed ones: the definition replaces the field list. The form's status doesn't change.
 
 If the response is `409` with `SchemaVersionConflict`, someone changed the form after you read it. Read it again, compare it with your plan, and ask the user before you retry. Never resend the old definition, because it would discard their changes.
 
 If the response is `403` with `EmailDependencyPermissionRequired`, email settings use a field you removed or retyped, and the token lacks `email:edit`. Nothing changed. If the response includes `warnings`, the save succeeded but left an email feature unable to work, for example an autoresponder whose response field is gone. Tell the user what each warning says and fix it only with their approval.
+
+## Deactivate or activate a form
+
+Deactivating takes the form offline on every website that uses it, so confirm with the user first.
+
+```bash
+curl "$FORMBREW_API/forms/FORM_ID" \
+  --request PATCH \
+  --header "Authorization: Bearer $FORMBREW_MANAGEMENT_TOKEN" \
+  --header "X-Workspace-ID: $FORMBREW_WORKSPACE_ID" \
+  --header "Content-Type: application/json" \
+  --data '{ "status": "DEACTIVATED" }'
+```
+
+Send `"ACTIVE"` to serve the form again. Activating checks that every field is valid. Both changes need `forms:activate`. Neither changes the form's fields, allowed origins, or public form tokens.
+
+Public requests to a deactivated form return `403` with `FormDeactivated`.
 
 ## Resume after a partial failure
 
 Keep the IDs and keys you confirmed. On the next attempt:
 
 - Retry a create with its original idempotency key. You get the same form or public form token back.
-- Read the form before repeating any other step. Skip steps whose result is already in place, such as identical allowed origins or a published status.
+- Read the form before repeating any other step. Skip steps whose result is already in place, such as identical allowed origins.
 - Never create a second form to work around an error.
 
 ## Review leads and delete the rest

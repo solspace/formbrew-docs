@@ -1,15 +1,17 @@
 ---
 title: "Manage forms"
-description: "Create, configure, publish, and archive forms in the Formbrew dashboard."
+description: "Create, configure, deactivate, archive, and restore forms in the Formbrew dashboard."
 ---
 
-The **Forms** page lists every draft and published form in the current workspace, newest first. Each row shows the form name, status, field count, and when the form was last updated.
+The **Forms** page lists every active and deactivated form in the current workspace, newest first. Each row shows the form name, an **Active** or **Deactivated** status, the field count, and when the form was last updated.
 
-Owners, admins, and editors can create, change, publish, and archive forms. Viewers can open forms but cannot save changes. See [Members and roles](/dashboard-guide/members).
+Owners, admins, and editors can create, change, deactivate, archive, and restore forms. Viewers can open forms but cannot save changes. See [Members and roles](/dashboard-guide/members).
 
 ## Create a form
 
-Select **New form**. Formbrew immediately creates an **Untitled form** draft and opens it in the [form builder](/dashboard-guide/form-builder). There is no setup dialog, so configure the form in the **Settings** panel after it opens.
+Select **New form**. Formbrew immediately creates an active **Untitled form** and opens it in the [form builder](/dashboard-guide/form-builder). There is no setup dialog, so configure the form in the **Settings** panel after it opens.
+
+A new form doesn't load on any website until you add an allowed origin and create a public form token. [Setup banners](/dashboard-guide/public-access#setup-banners) at the top of the form remind you to add them.
 
 ## Form settings
 
@@ -19,7 +21,7 @@ In the builder, select an empty area of the preview, or the preview submit butto
 | --- | --- |
 | Name | The form name. It is required, and the public form definition includes it. |
 | Slug | A URL-friendly identifier that is unique in the workspace. Formbrew lowercases it and replaces other characters with hyphens. |
-| Status | **Draft** prevents public access. **Published** lets allowed websites fetch and submit the form. |
+| Status | **Active** lets allowed websites load and submit the form. **Deactivated** stops the form loading and accepting submissions but keeps its setup. |
 | Submit button | The button label used by managed Formbrew forms. An empty value becomes `Submit`. |
 | Honeypot input name | The name of the hidden anti-spam input. |
 | Success message | The message returned after an accepted submission. An empty value becomes `Thanks for your submission.` |
@@ -40,25 +42,51 @@ Managed Formbrew forms add the honeypot input automatically. For a plain HTML fo
 
 The honeypot name must start with `_` and contain 4 to 80 letters, numbers, underscores, or hyphens. Choose a name that is not also a field key.
 
-## Draft and published forms
+## Form statuses
 
-You cannot fetch or submit draft forms through the Public API. To publish a form:
+Every form has one of three statuses. The form header shows whether the form is **Active** or **Deactivated**.
 
-1. Save at least one allowed origin in **Public access**.
-2. Open **Layout** and select an empty area of the preview to show **Settings**.
-3. Set **Status** to **Published**.
-4. Select **Save changes**.
+| Status | What happens |
+| --- | --- |
+| Active | Allowed websites can load and submit the form. |
+| Deactivated | The form stops loading and accepting submissions. Its fields, allowed origins, and public form tokens stay unchanged. |
+| Archived | The form stops loading and accepting submissions, and moves to the **Archived** view. You can't open the form or its submissions until you restore it. |
 
-**Published** stays unavailable until the form has a saved allowed origin. Every field must also have valid settings.
+A form loads on a website only when all of these are true:
 
-A form can stay published while you edit fields, labels, validation, button text, and success text. Integrations fetch the current definition, so saved changes can affect visitors immediately.
+- The form is **Active**.
+- The website's origin is one of the form's [allowed origins](/dashboard-guide/public-access#allowed-origins).
+- The website uses a [public form token](/dashboard-guide/public-access#public-form-tokens) that isn't revoked or expired.
+
+A form can stay active while you edit fields, labels, validation, button text, and success text. Integrations fetch the current definition, so saved changes can affect visitors immediately.
+
+## Activate or deactivate a form
+
+Deactivate a form to take it offline without changing its setup, for example while a campaign is paused.
+
+1. Open **Layout** and select an empty area of the preview to show **Settings**.
+2. Set **Status** to **Deactivated** or **Active**.
+3. Select **Save changes**.
+
+Requests to a deactivated form return `403` with the message `This form is not accepting submissions.` The hosted embed and the managed JavaScript and React forms show that message instead of the form. Formbrew doesn't count these requests toward [usage](/dashboard-guide/usage).
+
+Activating a form checks that every field has valid settings. You can activate a form without allowed origins, but websites can't load it until you add one.
 
 ## Archive a form
 
 Open the actions menu on a form row and select **Archive**. Confirm with **Archive form**.
 
-Archiving removes the form from the **Forms** page and stops public access. Formbrew keeps existing submissions, but you can no longer open the form or its submissions in the dashboard.
+Archiving stops the form from loading and accepting submissions, and moves it to the **Archived** view. Formbrew keeps its submissions, but you can't open the form or its submissions until you restore it.
 
-<Warning>
-  There is currently no way to restore an archived form. Make sure you no longer need to manage the form or review its submissions before archiving it.
-</Warning>
+## Restore an archived form
+
+1. On the **Forms** page, select **Archived**. Each archived form shows when it was archived.
+2. Select **Restore** next to the form.
+
+The form returns to **Forms** with the status **Deactivated**, so it doesn't go live by accident. Its submissions are visible again. To serve the form again, [activate it](#activate-or-deactivate-a-form).
+
+Owners, admins, and editors can restore forms. Viewers can see archived forms but can't restore them.
+
+<Note>
+  You can restore archived forms only in the dashboard. Management tokens and agents can archive forms but can't list or restore them.
+</Note>

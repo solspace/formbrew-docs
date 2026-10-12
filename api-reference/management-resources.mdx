@@ -6,7 +6,7 @@ description: "Catalog of Management API resources and their behavior."
 This page summarizes the Management API resources. For complete request and response schemas, see the endpoint pages in this section or the [Management API OpenAPI document](https://api.formbrew.com/management/v1/openapi.json).
 
 <Note>
-  The dashboard can call every operation here, subject to your role. [Management tokens](/agents/managed-mode) can call the form, field, allowed origin, publication, public form token, email settings, and submission operations, except viewing and restoring trash and exporting, within their permissions. See [Management API overview](/api-reference/management-overview#authentication).
+  The dashboard can call every operation here, subject to your role. [Management tokens](/agents/managed-mode) can call the form, field, allowed origin, form status, public form token, email settings, and submission operations, except viewing and restoring trash and exporting, within their permissions. See [Management API overview](/api-reference/management-overview#authentication).
 </Note>
 
 Paths are relative to `https://api.formbrew.com/management/v1`. Unless noted, operations require the `X-Workspace-ID` header.
@@ -28,7 +28,7 @@ Paths are relative to `https://api.formbrew.com/management/v1`. Unless noted, op
 | Method | Path | Behavior |
 | --- | --- | --- |
 | `GET` | `/forms` | Lists non-archived forms, newest first, with fields embedded. |
-| `POST` | `/forms` | Creates a `DRAFT` form with a generated honeypot field name. |
+| `POST` | `/forms` | Creates an `ACTIVE` form with a generated honeypot field name. |
 | `GET` | `/forms/{formId}` | Gets one non-archived form and its fields. |
 | `PATCH` | `/forms/{formId}` | Updates the name, slug, status, submit-button label, success message, or honeypot field name. |
 | `PUT` | `/forms/{formId}/definition` | Replaces the form settings and complete field list in one request. |
@@ -37,11 +37,13 @@ Paths are relative to `https://api.formbrew.com/management/v1`. Unless noted, op
 
 Creating a form requires `name`; slug, submit-button label, and success message are optional. Formbrew normalizes slugs and makes them unique within the workspace.
 
-Publishing requires at least one allowed origin and valid field definitions. You can replace origins with an empty array only while the form isn't published. An empty body (`{}`) also clears the origins of an unpublished form.
+A form's `status` is `ACTIVE`, `DEACTIVATED`, or `ARCHIVED`. Only an `ACTIVE` form serves its definition and accepts submissions through the [Public API](/api-reference/public-overview#access-model). It also needs a matching allowed origin and a usable public form token. A `DEACTIVATED` form keeps its fields, allowed origins, and public form tokens.
+
+Setting `status` to `ACTIVE` checks that every field definition is valid. It doesn't require an allowed origin. You can replace origins with an empty array at any time, including on an active form. An empty body (`{}`) also clears the origins.
 
 The definition operation requires `expectedSchemaVersion` and `expectedStatus`. If the form changed since you read it, the request returns `409` with `SchemaVersionConflict`. The operation deletes fields you leave out of the list.
 
-Archiving removes a form from list and retrieval operations. There is no restore operation.
+Archiving, with `DELETE` or by setting `status` to `ARCHIVED`, removes a form from list and retrieval operations. Every operation on an archived form returns `404`, including its submission operations. Formbrew keeps the submissions. People can [restore an archived form](/dashboard-guide/forms#restore-an-archived-form) in the dashboard, and it returns as `DEACTIVATED`.
 
 ## Form fields
 

@@ -24,7 +24,7 @@ curl --include https://api.formbrew.com/v1/forms/YOUR_PUBLIC_FORM_TOKEN \
   --header 'Origin: https://www.example.com'
 ```
 
-A `200` response with a `data` object means the token is active, the form is published, and that origin is allowed. Any other status returns the same error codes described below.
+A `200` response with a `data` object means the token is usable, the form is active, and that origin is allowed. Any other status returns the same error codes described below.
 
 {/* docs-check: production-setting email.delivery */}
 
@@ -62,12 +62,20 @@ The request origin is not one of the form's [allowed origins](/integrations/publ
 
 The response is readable JSON rather than a CORS error because the Public API answers CORS requests from any HTTP or HTTPS origin before it checks the allowed origins.
 
+### Form deactivated
+
+**Response:** `403` `FormDeactivated`, `This form is not accepting submissions.`
+
+Someone deactivated the form. Its fields, allowed origins, and tokens are unchanged. To serve it again, open **Layout**, set **Status** to **Active**, and select **Save changes**. See [Activate or deactivate a form](/dashboard-guide/forms#activate-or-deactivate-a-form).
+
+The hosted embed and the managed JavaScript and React forms show this message instead of the form. Formbrew checks the form status before the origin, so this response doesn't confirm that the origin is allowed.
+
 ### Form not found
 
 **Response:** `404` `NotFound`, `Token not found.` or `Form not found.`
 
 - `Token not found.`: the token is misspelled or truncated. Copy it again from **Public access**.
-- `Form not found.`: the form is not published, or its workspace is no longer active. Set the form's **Status** to **Published**.
+- `Form not found.`: the form is archived, or its workspace is no longer active. [Restore the form](/dashboard-guide/forms#restore-an-archived-form), then activate it.
 
 ### Token revoked or expired
 

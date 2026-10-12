@@ -1,6 +1,6 @@
 ---
 title: "Managed mode for coding agents"
-description: "Let an authorized agent create, configure, and publish Formbrew forms for you."
+description: "Let an authorized agent create and configure Formbrew forms for you."
 ---
 
 In managed mode, an agent uses a management token to create or update forms in one workspace and then integrates them into the website. Without a management token, agents use [integration-only mode](/agents) and the user makes changes in the dashboard.
@@ -19,9 +19,9 @@ A token can hold these actions on forms:
 | --- | --- |
 | `forms:read` | Listing forms and reading form definitions. Every other action requires it. |
 | `forms:edit` | Editing fields, layout, the form name and slug, the submit button label, and the success message. |
-| `forms:publish` | Publishing and unpublishing. |
+| `forms:activate` | Changing the status to `ACTIVE` or `DEACTIVATED`. |
 | `forms:origins` | Replacing the allowed origins. |
-| `forms:archive` | Archiving forms. |
+| `forms:archive` | Archiving forms, including setting the status to `ARCHIVED`. |
 | `tokens:read` | Listing public form tokens. |
 | `tokens:create` | Creating public form tokens. |
 | `tokens:revoke` | Revoking public form tokens. |
@@ -44,11 +44,12 @@ Management tokens cannot:
 - Create, read, or change webhooks or their signing secrets.
 - Add email recipients or send email to addresses that aren't already approved.
 - Change submitted values, view or restore trash, permanently delete submissions, or export submissions.
+- List or restore archived forms. Only people can restore them, in the dashboard.
 - Create or manage management tokens, or read workspace activity.
 
 ## How agents must work
 
-- Describe the intended fields, layout, settings, allowed origins, publication, and side effects. Get the user's approval before changing anything, and ask again if the plan changes materially. A management token does not prove that the user approved a change.
+- Describe the intended fields, layout, settings, allowed origins, form status, and side effects. Get the user's approval before changing anything, and ask again if the plan changes materially. A management token does not prove that the user approved a change.
 - Ask which fields the user wants before proposing a schema. Suggest common defaults only when asked.
 - Use exact website origins that the user confirms. Never guess domains.
 - Reuse confirmed form and token IDs when resuming after a partial failure.
@@ -82,7 +83,7 @@ Send an `Idempotency-Key` header when you create a form, a field, or a public fo
 - If the resource no longer exists, a retry returns `409` with `IdempotentResourceUnavailable`.
 - Every retry is checked against the token's current state and permissions. A revoked token can't replay a request.
 
-Other operations are safe to retry without a key. Replacing a definition requires `expectedSchemaVersion` and `expectedStatus`, so a retry after success returns `409` with `SchemaVersionConflict` instead of overwriting newer changes. When that happens, read the form again, compare it with what you intended, and ask the user before you save again if someone else changed it. Replacing allowed origins, publishing, and revoking are idempotent.
+Other operations are safe to retry without a key. Replacing a definition requires `expectedSchemaVersion` and `expectedStatus`, so a retry after success returns `409` with `SchemaVersionConflict` instead of overwriting newer changes. When that happens, read the form again, compare it with what you intended, and ask the user before you save again if someone else changed it. Replacing allowed origins, changing a form's status, and revoking are idempotent.
 
 ## Errors
 
@@ -103,7 +104,7 @@ Errors use the [standard envelope](/api-reference/management-overview#errors). `
 | `409` | `IdempotentResourceUnavailable` | The resource created with this key no longer exists. |
 | `422` | `IdempotencyKeyReused` | The key was used with a different request. |
 
-A request that requires several actions, such as renaming and publishing in one `PATCH`, fails as a whole when any action is missing. Nothing changes. Changing `honeypotFieldName` requires `security:edit`; sending its current value unchanged is allowed.
+A request that requires several actions, such as renaming and deactivating in one `PATCH`, fails as a whole when any action is missing. Nothing changes. Changing `honeypotFieldName` requires `security:edit`; sending its current value unchanged is allowed.
 
 Report permission errors to the user with the missing actions. Never try another route to make the same change.
 

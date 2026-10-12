@@ -64,7 +64,7 @@
     },
     "/v1/forms/{token}": {
       "get": {
-        "summary": "Get a published form definition",
+        "summary": "Get an active form definition",
         "tags": [
           "Forms"
         ],
@@ -2157,7 +2157,7 @@
     },
     "/v1/forms/{token}/submit": {
       "post": {
-        "summary": "Submit a published form",
+        "summary": "Submit an active form",
         "tags": [
           "Submissions"
         ],

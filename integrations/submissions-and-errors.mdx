@@ -82,7 +82,8 @@ Field validation stops at the first failing field, so `message` describes one pr
 | `401` | `Unauthorized` | The public form token is revoked or expired |
 | `402` | `PLAN_LIMIT_REACHED` | The workspace cannot accept more submissions on its current plan. Submissions only. |
 | `403` | `Forbidden` | The request origin is not an allowed origin for the form |
-| `404` | `NotFound` | The token is unknown, or the form is not published |
+| `403` | `FormDeactivated` | The form is deactivated. The message is `This form is not accepting submissions.` |
+| `404` | `NotFound` | The token is unknown, or the form is archived |
 | `409` | `SchemaVersionConflict` | The form changed while the submission was being processed. Submissions only. Reload the definition and try again. |
 | `413` | `FST_ERR_CTP_BODY_TOO_LARGE` | The body is larger than 1 MiB |
 | `415` | `FST_ERR_CTP_INVALID_MEDIA_TYPE` | The content type is not supported |
@@ -134,4 +135,4 @@ Public submissions:
 
 Limits use fixed time windows. A limit violation returns `429`. Responses do not include rate-limit or `Retry-After` headers, so avoid automatic tight retry loops.
 
-The API rejects requests with a bad token, an unpublished form, or a disallowed origin before it applies rate limits. Requests made from your server all share the server's IP address.
+The API rejects requests with a bad token, a deactivated or archived form, or a disallowed origin before it applies rate limits. Requests made from your server all share the server's IP address.

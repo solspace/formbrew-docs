@@ -23,7 +23,7 @@ Select **Save changes** at the top of the page, or press ⌘S on macOS or Ctrl +
 When a save fails validation, the builder selects the first field with an error and shows each error next to its setting. Fix the errors and save again.
 
 <Warning>
-  Saved changes to a published form are live immediately. There is no separate publish step for edits.
+  Saved changes to an active form are live immediately. There is no separate publish step for edits.
 </Warning>
 
 If someone else saves the form while you edit it, Formbrew rejects your save. Reload the page to load their changes, then apply your edits again.
@@ -53,7 +53,7 @@ Formbrew derives the initial key from the label. It lowercases the label, replac
 While the key still matches the value generated from the label, changing the label updates the key too. After you customize the key, later label changes keep it.
 
 <Warning>
-  Changing a key changes the submission contract. Update custom frontend code and downstream webhook consumers before changing keys on a published form.
+  Changing a key changes the submission contract. Update custom frontend code and downstream webhook consumers before changing keys on a form that websites already use.
 </Warning>
 
 ## Arrange fields in rows

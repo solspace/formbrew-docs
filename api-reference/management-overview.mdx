@@ -10,13 +10,13 @@ https://api.formbrew.com/management/v1
 ```
 
 <Note>
-  Your own code can call the form, field, allowed origin, publication, public form token, email settings, and submission operations with a [management token](/agents/managed-mode). Each token belongs to one workspace and holds only the permissions a workspace owner or administrator grants. Every other operation accepts only sign-in tokens issued to the Formbrew dashboard. Formbrew doesn't offer OAuth apps.
+  Your own code can call the form, field, allowed origin, form status, public form token, email settings, and submission operations with a [management token](/agents/managed-mode). Each token belongs to one workspace and holds only the permissions a workspace owner or administrator grants. Every other operation accepts only sign-in tokens issued to the Formbrew dashboard. Formbrew doesn't offer OAuth apps.
 </Note>
 
 ## What you can do today
 
 - Manage forms, public form tokens, submissions, and webhooks in the [dashboard](https://formbrew.com).
-- Create, edit, and publish forms from your own code or a coding agent with a [management token](/agents/managed-mode), over [HTTP](/agents/http-recipes) or [MCP](/agents/mcp).
+- Create, edit, activate, and deactivate forms from your own code or a coding agent with a [management token](/agents/managed-mode), over [HTTP](/agents/http-recipes) or [MCP](/agents/mcp).
 - Fetch form definitions and create submissions with the [Public API](/api-reference/public-overview).
 - Receive new submissions on your server with [webhooks](/webhooks/overview).
 - Download the [Management API OpenAPI document](https://api.formbrew.com/management/v1/openapi.json) without credentials to review the resource contract.
@@ -47,7 +47,7 @@ A management token works only in the workspace that issued it, so `X-Workspace-I
 
 Your role determines which operations succeed. For example, viewers can read forms and submissions but can't change them or read public form tokens.
 
-Formbrew looks up resources within the selected workspace. Resources in other workspaces, archived forms, and deleted webhook endpoints return `404`, so responses don't reveal whether a resource exists elsewhere.
+Formbrew looks up resources within the selected workspace. Resources in other workspaces, archived forms and their submissions, and deleted webhook endpoints return `404`, so responses don't reveal whether a resource exists elsewhere.
 
 ## Resource groups
 

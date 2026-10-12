@@ -8,7 +8,7 @@ Open a form and select **Public access** to control who can load and submit it. 
 - **Allowed origins** define which websites may fetch and submit the form.
 - **Public form tokens** identify the form in public URLs and SDK configuration.
 
-You must also publish the form. A token by itself does not make a draft form public.
+The form must also be **Active**. A token by itself does not make a deactivated form public. See [Form statuses](/dashboard-guide/forms#form-statuses).
 
 ## Allowed origins
 
@@ -31,7 +31,7 @@ Type an origin and press Enter, Space, or Tab to add it. You can also paste seve
   `https://example.com` and `https://www.example.com` are different origins. Localhost ports are also distinct, so add the exact port used by your development server.
 </Warning>
 
-A published form must keep at least one allowed origin. To remove the last one, set the form to **Draft** first.
+You can remove every allowed origin, even from an active form. Websites then can't load or submit the form until you add an origin again.
 
 The browser supplies `Origin` automatically. The public API uses `Referer` only when `Origin` is absent. Non-browser clients must send the configured website origin explicitly.
 
@@ -57,14 +57,24 @@ For a planned rotation, generate a new token and update your deployed websites f
 
 ## Get integration code
 
-Select **Integration** in the form navigation to open the integration guide. It shows whether the form is published, has allowed origins, and has a usable token.
+Select **Integration** in the form navigation to open the integration guide. It shows whether the form is **Active** or **Deactivated**, has allowed origins, and has a usable token.
 
 Choose **Embed**, **HTML**, **JavaScript**, or **React**, pick a token inside the example, and copy the code. See the [frontend quickstart](/integrations/quickstart) for details.
 
-## Publish checklist
+## Setup banners
 
-Before publishing, verify that:
+Until a form has an allowed origin and a usable public form token, banners at the top of each form tab, except **Public access**, show what is missing. Select a banner's message to open **Public access**.
 
+- **No allowed origins** appears when the form has no allowed origins. Select **Add origin**, enter the website origin, and select **Add origin** again. If you paste a page URL, Formbrew keeps only its origin. The banner confirms with **Origin added**, then disappears.
+- **No public form token** appears when every token is revoked or expired, or when there are none. Select **Create token**, keep or change the generated name, and select **Create token** again. Select **Copy token** to copy the new token, then select **Done** or close the popover. The banner disappears, and you can copy the token again later from **Public access**.
+
+Only owners, admins, and editors can add origins and create tokens from the banners. Viewers see the origins banner without **Add origin**, and they don't see the token banner.
+
+## Launch checklist
+
+Before you add the form to a website, verify that:
+
+- The form is **Active**.
 - At least one allowed origin is saved.
 - Every website hostname, including preview and development sites, has its own allowed origin.
 - At least one active token exists for the integration.

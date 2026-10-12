@@ -56,7 +56,7 @@ Workspace settings also contain **Agent access**, where owners and admins create
   Changing the slug changes every dashboard URL for the workspace. Old links show **Page not found**, and nobody can claim the old slug for 24 hours. Tabs that are already open keep working.
 </Warning>
 
-Changing the slug does not affect published forms, public form tokens, management tokens, or webhooks.
+Changing the slug does not affect active forms, public form tokens, management tokens, or webhooks.
 
 ## Delete a workspace
 
@@ -69,7 +69,7 @@ Only the owner can delete a workspace.
 Deletion takes effect immediately:
 
 - Members can no longer open the workspace's forms, submissions, or settings.
-- Published forms stop loading and stop accepting submissions. Public requests receive a not found response.
+- Active forms stop loading and stop accepting submissions. Public requests receive a not found response.
 - Formbrew cancels queued and retrying webhook deliveries.
 
 Formbrew permanently deletes the workspace, its forms, submissions, and settings 30 days later. Until then, the workspace still counts toward each member's [membership limit](#workspace-membership-limit). Members other than the owner can leave it.

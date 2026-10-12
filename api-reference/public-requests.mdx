@@ -59,7 +59,7 @@ The API responds with JSON for every content type, including native HTML form po
 
 ## Validation
 
-Formbrew validates values against the current published form definition:
+Formbrew validates values against the form's current definition:
 
 - Formbrew rejects unknown field keys.
 - Formbrew enforces required values.
@@ -95,8 +95,8 @@ Errors that occur while reading the body use the same envelope with a framework 
 | `400` | Invalid or malformed body, invalid form values or metadata, a filled honeypot, or a file part |
 | `401` | The public form token is revoked or expired |
 | `402` | The workspace has reached its monthly submission limit (submissions only) |
-| `403` | The origin is missing, malformed, or not allowed |
-| `404` | The token is unknown, the form isn't published or is unavailable, or the path doesn't exist |
+| `403` | The origin is missing, malformed, or not allowed, or the form is deactivated (`FormDeactivated`) |
+| `404` | The token is unknown, the form is archived or unavailable, or the path doesn't exist |
 | `409` | The form changed while the submission was processed (submissions only); fetch the definition and try again |
 | `413` | The request body is larger than 1 MiB |
 | `415` | Unsupported request content type |

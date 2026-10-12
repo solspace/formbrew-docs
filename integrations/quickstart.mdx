@@ -8,7 +8,7 @@ description: "Prepare a form and connect it to a website in a few steps."
 Your form needs all three public-access requirements:
 
 1. **Allowed origin** matching the website that loads and submits the form. Add it in **Public access**.
-2. **Published status** so the Public API can load the form. You can publish only after you add at least one allowed origin.
+2. **Active status** so the Public API can load the form. New forms are active. A deactivated form returns `403`.
 3. **Active public form token** used in the embed, endpoint, or SDK configuration. Generate it in **Public access**.
 
 Open **Integration** in the form builder navigation to see the integration guide. It shows whether the form meets these requirements and lets you copy examples with your selected token and current field markup.
@@ -50,7 +50,8 @@ Formbrew stores each test submission, which triggers any email notifications and
 | --- | --- | --- |
 | `401` | Token is revoked or expired | Select or generate an active token |
 | `403` | Website origin is missing or not allowed | Add the exact scheme, hostname, and port |
-| `404` | Token is unknown or the form is not published | Publish the form and verify the token |
+| `403` | The form is deactivated (`FormDeactivated`) | Set the form's **Status** to **Active** |
+| `404` | Token is unknown or the form is archived | Verify the token, or restore and activate the form |
 | `400` | Submitted values fail field validation | Read the response `message` and check the field configuration |
 | `429` | Request rate limit was exceeded | Stop retries and try again later |
 

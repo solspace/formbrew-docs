@@ -50,7 +50,7 @@ Formbrew compares origins exactly after normalization:
 - `https://example.com`, `https://www.example.com`, `http://example.com`, and `http://localhost:3000` are four different origins.
 - Wildcards are not supported. Add each origin separately, including preview deployments and other environments of your website.
 
-A form must have at least one allowed origin before you can publish it, and you cannot remove the last origin from a published form.
+A form with no allowed origins can't load on any website. You can add or remove origins at any time, including the last origin of an active form.
 
 ## How requests are checked
 
@@ -60,7 +60,7 @@ The API applies the same checks to `GET` definition requests and `POST` submissi
 
 1. **Request format.** For submissions only, a malformed or oversized body returns `400` or `413` before any other check.
 2. **Token.** Unknown tokens return `404`; revoked or expired tokens return `401`.
-3. **Status.** A form that is not published returns `404`.
+3. **Status.** A deactivated form returns `403` with `FormDeactivated`. An archived form returns `404`.
 4. **Origin.** An origin missing from the allowed origins returns `403`.
 5. **Rate limit.** Too many requests return `429`.
 6. **Submission checks.** For submissions only: honeypot, field validation, and plan limits.

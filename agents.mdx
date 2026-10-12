@@ -14,7 +14,7 @@ This page is the entry point for AI coding agents working in a website repositor
 Agents work in one of two modes:
 
 - **Integration-only mode** is the default. You integrate an existing Formbrew form into the user's website by using its public form token. The user creates and changes forms, allowed origins, and public form tokens in the [Formbrew dashboard](https://formbrew.com).
-- **Managed mode** applies when the user gives you a management token. You can also create, edit, and publish forms, set allowed origins, and create public form tokens, within the permissions the token grants and only after the user approves each change. Follow [Managed mode](/agents/managed-mode), and [connect through MCP](/agents/mcp) if your client supports remote MCP servers.
+- **Managed mode** applies when the user gives you a management token. You can also create, edit, activate, and deactivate forms, set allowed origins, and create public form tokens, within the permissions the token grants and only after the user approves each change. Follow [Managed mode](/agents/managed-mode), and [connect through MCP](/agents/mcp) if your client supports remote MCP servers.
 
 ## Before you edit code
 
@@ -24,7 +24,7 @@ Confirm these details with the user:
 2. The page or component that should render the form.
 3. Every website origin that will load the form, such as `https://www.example.com` and your local development URL.
 
-If the form does not exist yet, give the user the steps in the [dashboard quickstart](/dashboard-guide/getting-started): the user must add each allowed origin, create a public form token, and publish the form. In managed mode, propose the form instead and create it after the user approves. Do not guess production domains.
+If the form does not exist yet, give the user the steps in the [dashboard quickstart](/dashboard-guide/getting-started): the user must create the form, add each allowed origin, and create a public form token. In managed mode, propose the form instead and create it after the user approves. Do not guess production domains.
 
 ## Choose the integration
 
@@ -50,7 +50,7 @@ Follow the repository's existing conventions for components, styling, and config
 Do not submit test data. Submissions count toward usage, appear in the user's dashboard, and can trigger webhooks.
 
 1. Run the website's own checks when the repository has them, such as its build, typecheck, linter, and tests.
-2. [Check the published definition with curl](/integrations/troubleshooting#check-the-definition-with-curl) by using an allowed origin, or with the MCP tool `check_public_definition`. If the site uses the hosted embed, also check that its script URL returns `200`.
+2. [Check the public definition with curl](/integrations/troubleshooting#check-the-definition-with-curl) by using an allowed origin, or with the MCP tool `check_public_definition`. If the site uses the hosted embed, also check that its script URL returns `200`.
 3. Report every check you ran and every check you did not run. A curl request does not prove that the form renders in a browser, that the Content Security Policy allows it, or that submissions work.
 
 Ask the user to open the page in a browser and send a real submission when they are ready.

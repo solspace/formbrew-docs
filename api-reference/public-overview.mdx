@@ -1,6 +1,6 @@
 ---
 title: "Public API overview"
-description: "Fetch published form definitions and submit form values."
+description: "Fetch active form definitions and submit form values."
 ---
 
 The Public API is the browser-safe API behind the hosted embed, the JavaScript and React SDKs, plain HTML forms, and custom clients. You don't need an API key: a public form token identifies the form, and the form's allowed origins control where you can use it.
@@ -17,7 +17,7 @@ The Public API and the [Management API](/api-reference/management-overview) are 
 | --- | --- | --- |
 | `GET` | `/v1/health` | Check that the Public API is available. |
 | `GET` | `/v1/openapi.json` | Download the Public API OpenAPI document. |
-| `GET` | `/v1/forms/{token}` | Fetch the render-safe definition of a published form. |
+| `GET` | `/v1/forms/{token}` | Fetch the render-safe definition of an active form. |
 | `POST` | `/v1/forms/{token}/submit` | Validate and create a submission. |
 
 The endpoint reference in this section is based on the [Public API OpenAPI document](https://api.formbrew.com/v1/openapi.json). For origin rules, content types, errors, and rate limits, see [Public API requests](/api-reference/public-requests).
@@ -27,9 +27,11 @@ The endpoint reference in this section is based on the [Public API OpenAPI docum
 Both form endpoints require:
 
 - A known public form token that isn't revoked or expired.
-- A form with `PUBLISHED` status.
+- A form with `ACTIVE` status.
 - An `Origin` header, or a `Referer` header when `Origin` is absent, that matches one of the form's allowed origins.
 - A request within the form's [rate limits](/api-reference/public-requests#rate-limits).
+
+A `DEACTIVATED` form returns `403` with `FormDeactivated`. An archived form returns `404`, the same as an unknown token.
 
 Public form tokens are publishable identifiers, so you can include them in frontend code. They don't grant access to the Management API. See [Tokens and origins](/integrations/public-access) for how tokens and allowed origins work together.
 

@@ -1,16 +1,16 @@
 ---
 title: "Dashboard quickstart"
-description: "Create, publish, connect, and test your first Formbrew form."
+description: "Create, connect, and test your first Formbrew form."
 ---
 
-This guide takes a form from an empty draft to a working frontend integration.
+This guide takes a new, empty form to a working frontend integration.
 
 <Steps>
   <Step title="Open a workspace">
     Sign in at [formbrew.com](https://formbrew.com). Choose a workspace, or create one if you have none. See [Workspaces](/dashboard-guide/workspaces).
   </Step>
   <Step title="Create a form">
-    Open **Forms** and select **New form**. Formbrew creates an **Untitled form** draft and opens the form builder. Update the name and other form settings in the **Settings** panel.
+    Open **Forms** and select **New form**. Formbrew creates an active **Untitled form** and opens the form builder. Update the name and other form settings in the **Settings** panel.
   </Step>
   <Step title="Add fields">
     Select field types under **Available fields**. Configure each field's label, key, required state, and validation in the **Edit field** panel. Drag fields in the preview to arrange them.
@@ -19,13 +19,10 @@ This guide takes a form from an empty draft to a working frontend integration.
     Select **Save changes**, or press ⌘S on macOS or Ctrl + S on other systems. The builder keeps your changes as a draft until you save.
   </Step>
   <Step title="Allow your website">
-    Open **Public access** and add the exact allowed origin of your website. Include the scheme and port when applicable, for example `https://www.example.com` or `http://localhost:5173`. Select **Save changes**.
+    Open **Public access** and add the exact allowed origin of your website. Include the scheme and port when applicable, for example `https://www.example.com` or `http://localhost:5173`. Select **Save changes**. You can also select **Add origin** in the banner at the top of the other form tabs.
   </Step>
   <Step title="Generate a token">
-    In **Public access**, select **Add new access token**. Give the token a recognizable name and select **Generate token**.
-  </Step>
-  <Step title="Publish the form">
-    Open **Layout** and select an empty area of the preview to show **Settings**. Change **Status** to **Published** and select **Save changes**. You cannot publish a form until it has at least one allowed origin.
+    In **Public access**, select **Add new access token**. Give the token a recognizable name and select **Generate token**. You can also select **Create token** in the banner at the top of the other form tabs. The form can now load on your website.
   </Step>
   <Step title="Connect and test">
     Select **Integration**, choose **Embed**, **HTML**, **JavaScript**, or **React**, and copy the generated example. Submit a test entry from an allowed website and verify that it appears under **Submissions**.
@@ -33,7 +30,7 @@ This guide takes a form from an empty draft to a working frontend integration.
 </Steps>
 
 <Warning>
-  Changes to a published form affect its public definition immediately after you save them. There is no separate republish step.
+  Changes to an active form affect its public definition immediately after you save them. There is no separate publish step.
 </Warning>
 
 ## Form defaults
@@ -43,7 +40,7 @@ New forms start with these values:
 | Setting | Default |
 | --- | --- |
 | Name | `Untitled form` |
-| Status | Draft |
+| Status | Active |
 | Submit button | `Submit` |
 | Success message | `Thanks for your submission.` |
 | Honeypot | A generated name such as `_fb_k3m9x2q7_url` |
