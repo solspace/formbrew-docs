@@ -1,9 +1,9 @@
 ---
 title: "Submissions"
-description: "Review submitted values, update workflow status, add internal notes, export submissions, and delete or restore them."
+description: "Review submitted values, update workflow status, add internal notes, review spam, export submissions, and delete or restore them."
 ---
 
-Open a form and select **Submissions** to view its inbox. Newest submissions appear first. Each row shows its status, ID, creation time, and up to four submitted values.
+Open a form and select **Submissions** to view its inbox. The tab has three views: **Inbox**, **Spam**, and **Trash**. Newest submissions appear first. Each row shows its status, ID, creation time, and up to four submitted values.
 
 Select **Refresh** to load new submissions.
 
@@ -13,7 +13,7 @@ Select **Refresh** to load new submissions.
 | --- | --- |
 | New | Not reviewed yet. This is the default for accepted submissions. |
 | Reviewed | Handled or acknowledged by your team. |
-| Spam | Accepted by the API but later classified as unwanted. |
+| Spam | Accepted by the API but later classified as unwanted. Moves the submission to the **Spam** view. |
 | Archived | Removed from the inbox. |
 
 Formbrew rejects submissions that fill in the [honeypot input](/dashboard-guide/forms#honeypot-input) and never stores them. They do not appear in the inbox.
@@ -31,9 +31,24 @@ Hidden field values appear with the other values. Confirm and Content fields nev
 
 Change the **Status** or **Notes**, then select **Save details**. Submitted values are read-only. Owners, admins, and editors can change status and notes.
 
+## Spam
+
+Submissions with the **Spam** status leave the inbox and appear in the **Spam** view. Each entry shows when it was marked as spam, who marked it, and when it moves to Trash. For changes made by an agent, the entry shows the token's name and the person who issued it.
+
+{/* docs-check: production-setting ai-spam-check */}
+
+Only people and agents mark submissions as spam. Marking a submission as spam doesn't cancel notifications or webhooks that were already sent, and doesn't change your submission usage.
+
+In the **Spam** view:
+
+- Select **Not spam** to return a submission to the inbox with the **New** status.
+- Select **Move to trash** to delete it now.
+
+Spam moves to Trash 30 days after it was marked, and Trash permanently deletes it 30 days later. Formbrew's move appears in **Activity**. Owners, admins, and editors can mark submissions as not spam and delete them.
+
 ## Export submissions
 
-Select **Export JSON** to download the form's submissions as a JSON file. The file contains every submission in the inbox, including its status, notes, values, origin, and timestamps. The file excludes archived and trashed submissions.
+Select **Export JSON** to download the form's submissions as a JSON file. The file contains every submission in the inbox and in **Spam**, including its status, notes, values, origin, and timestamps. The file excludes archived and trashed submissions.
 
 Owners, admins, and editors can export submissions. Viewers need the **Export submissions** permission. See [Members and roles](/dashboard-guide/members).
 
@@ -47,9 +62,9 @@ Owners, admins, and editors can delete submissions. An agent with the **Move sub
 
 ## Restore submissions
 
-Open the form's **Submissions** tab and switch to **Trash**. Each trashed submission shows who deleted it, when, and when it will be permanently deleted. For agent deletions, the entry shows the token's name and the person who issued it.
+Open the form's **Submissions** tab and switch to **Trash**. Each trashed submission shows who deleted it, when, and when it will be permanently deleted. For agent deletions, the entry shows the token's name and the person who issued it. Spam that spent 30 days in Spam shows that Formbrew moved it.
 
-Select **Restore** to return a submission to the inbox with its status and notes unchanged. Restoring doesn't send notifications or webhooks again.
+Select **Restore** to return a submission to the inbox with its status and notes unchanged. Restored spam returns to **Spam** and stays there for another 30 days. Restoring doesn't send notifications or webhooks again.
 
 After 30 days, Formbrew permanently deletes the submission with its delivery history. The deletion appears in **Activity**.
 
@@ -63,4 +78,4 @@ Each saved change to fields, layout, or the form's name, slug, submit button, su
 
 ## Current limitations
 
-The dashboard does not currently provide inbox search, filtering, pagination, bulk actions, CSV export, or an archived-submission view. Archiving removes a submission from the inbox and from exports. Spam submissions stay in the inbox until you archive them.
+The dashboard does not currently provide inbox search, filtering, pagination, bulk actions, CSV export, or an archived-submission view. Archiving removes a submission from the inbox and from exports.

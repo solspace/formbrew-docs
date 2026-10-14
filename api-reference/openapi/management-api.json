@@ -11371,7 +11371,8 @@
                                   "FormToken",
                                   "ManagementToken",
                                   "ManagementTokenGrant",
-                                  "Submission"
+                                  "Submission",
+                                  "WorkspaceAiSpamCheckSetting"
                                 ]
                               },
                               "id": {
@@ -50682,6 +50683,19 @@
           },
           {
             "schema": {
+              "description": "Include submissions whose checks are still running. They are read-only and their deliveries have not been sent. Excluded by default.",
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "in": "query",
+            "name": "includePending",
+            "description": "Include submissions whose checks are still running. They are read-only and their deliveries have not been sent. Excluded by default."
+          },
+          {
+            "schema": {
               "description": "Maximum number of submissions to return. Omit to return all of them.",
               "type": "integer",
               "minimum": 1,
@@ -50740,6 +50754,69 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "aiSpamCheck": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "category": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "promotional",
+                                          "scam",
+                                          "malicious_links",
+                                          "gibberish",
+                                          "abusive",
+                                          "prompt_injection",
+                                          "other"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "description": "Why the submission was classified as spam. Null unless the verdict is spam."
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "enum": [
+                                      "pending",
+                                      "completed",
+                                      "failed",
+                                      "timed_out"
+                                    ]
+                                  },
+                                  "verdict": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "spam",
+                                          "not_spam"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "description": "Null until the check completes. Failed and timed-out checks have no verdict."
+                                  }
+                                },
+                                "required": [
+                                  "category",
+                                  "state",
+                                  "verdict"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The AI spam check of this submission, or null when it was not checked."
+                          },
                           "createdAt": {
                             "type": "string"
                           },
@@ -50782,6 +50859,27 @@
                               }
                             ]
                           },
+                          "processingState": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "complete"
+                            ],
+                            "description": "pending while checks run. Deliveries wait and the submission cannot be changed until it is complete."
+                          },
+                          "spamMarkedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "When the submission was marked as spam. Null unless its status is SPAM."
+                          },
                           "status": {
                             "type": "string",
                             "enum": [
@@ -50807,6 +50905,7 @@
                           "valuesJson": {}
                         },
                         "required": [
+                          "aiSpamCheck",
                           "createdAt",
                           "formId",
                           "formSchemaVersion",
@@ -50814,10 +50913,542 @@
                           "metadataJson",
                           "notes",
                           "origin",
+                          "processingState",
+                          "spamMarkedAt",
                           "status",
                           "updatedAt",
                           "userAgent",
                           "valuesJson"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "details": {},
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/management/v1/forms/{formId}/submissions/spam": {
+      "get": {
+        "summary": "List spam form submissions",
+        "tags": [
+          "Submissions"
+        ],
+        "description": "Lists up to 500 submissions marked as spam that are not in trash, most recently marked first, with what or who marked them. Spam moves to trash 30 days after it was marked.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "formId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Immutable workspace ID"
+            },
+            "in": "header",
+            "name": "x-workspace-id",
+            "required": true,
+            "description": "Immutable workspace ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "aiSpamCheck": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "category": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "promotional",
+                                          "scam",
+                                          "malicious_links",
+                                          "gibberish",
+                                          "abusive",
+                                          "prompt_injection",
+                                          "other"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "description": "Why the submission was classified as spam. Null unless the verdict is spam."
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "enum": [
+                                      "pending",
+                                      "completed",
+                                      "failed",
+                                      "timed_out"
+                                    ]
+                                  },
+                                  "verdict": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "spam",
+                                          "not_spam"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "description": "Null until the check completes. Failed and timed-out checks have no verdict."
+                                  }
+                                },
+                                "required": [
+                                  "category",
+                                  "state",
+                                  "verdict"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The AI spam check of this submission, or null when it was not checked."
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "formId": {
+                            "type": "string"
+                          },
+                          "formSchemaVersion": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "metadataJson": {
+                            "anyOf": [
+                              {},
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "notes": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "origin": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "processingState": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "complete"
+                            ],
+                            "description": "pending while checks run. Deliveries wait and the submission cannot be changed until it is complete."
+                          },
+                          "spamMarkedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "NEW",
+                              "REVIEWED",
+                              "SPAM",
+                              "ARCHIVED"
+                            ]
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          },
+                          "userAgent": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "valuesJson": {},
+                          "spamMarkedBy": {
+                            "type": "object",
+                            "properties": {
+                              "ai": {
+                                "type": "boolean",
+                                "description": "True when the AI spam check marked it."
+                              },
+                              "category": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "promotional",
+                                      "scam",
+                                      "malicious_links",
+                                      "gibberish",
+                                      "abusive",
+                                      "prompt_injection",
+                                      "other"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "description": "The AI spam check's reason. Null when a person marked it."
+                              },
+                              "managementToken": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "prefix": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name",
+                                      "prefix"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "user": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "email": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "email",
+                                      "id",
+                                      "name"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "ai",
+                              "category",
+                              "managementToken",
+                              "user"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "trashAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                            "description": "When the submission moves to Trash unless it leaves Spam first."
+                          }
+                        },
+                        "required": [
+                          "aiSpamCheck",
+                          "createdAt",
+                          "formId",
+                          "formSchemaVersion",
+                          "id",
+                          "metadataJson",
+                          "notes",
+                          "origin",
+                          "processingState",
+                          "spamMarkedAt",
+                          "status",
+                          "updatedAt",
+                          "userAgent",
+                          "valuesJson",
+                          "spamMarkedBy",
+                          "trashAt"
                         ],
                         "additionalProperties": false
                       }
@@ -51064,6 +51695,69 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "aiSpamCheck": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "category": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "promotional",
+                                          "scam",
+                                          "malicious_links",
+                                          "gibberish",
+                                          "abusive",
+                                          "prompt_injection",
+                                          "other"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "description": "Why the submission was classified as spam. Null unless the verdict is spam."
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "enum": [
+                                      "pending",
+                                      "completed",
+                                      "failed",
+                                      "timed_out"
+                                    ]
+                                  },
+                                  "verdict": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "spam",
+                                          "not_spam"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "description": "Null until the check completes. Failed and timed-out checks have no verdict."
+                                  }
+                                },
+                                "required": [
+                                  "category",
+                                  "state",
+                                  "verdict"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The AI spam check of this submission, or null when it was not checked."
+                          },
                           "createdAt": {
                             "type": "string"
                           },
@@ -51105,6 +51799,27 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "processingState": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "complete"
+                            ],
+                            "description": "pending while checks run. Deliveries wait and the submission cannot be changed until it is complete."
+                          },
+                          "spamMarkedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "When the submission was marked as spam. Null unless its status is SPAM."
                           },
                           "status": {
                             "type": "string",
@@ -51178,6 +51893,20 @@
                                   }
                                 ]
                               },
+                              "system": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "spam_retention"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "description": "Set when Formbrew moved it: spam_retention after 30 days in Spam."
+                              },
                               "user": {
                                 "anyOf": [
                                   {
@@ -51222,6 +51951,7 @@
                             },
                             "required": [
                               "managementToken",
+                              "system",
                               "user"
                             ],
                             "additionalProperties": false
@@ -51233,6 +51963,7 @@
                           }
                         },
                         "required": [
+                          "aiSpamCheck",
                           "createdAt",
                           "formId",
                           "formSchemaVersion",
@@ -51240,6 +51971,8 @@
                           "metadataJson",
                           "notes",
                           "origin",
+                          "processingState",
+                          "spamMarkedAt",
                           "status",
                           "updatedAt",
                           "userAgent",
@@ -52075,6 +52808,69 @@
                     "data": {
                       "type": "object",
                       "properties": {
+                        "aiSpamCheck": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "category": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "promotional",
+                                        "scam",
+                                        "malicious_links",
+                                        "gibberish",
+                                        "abusive",
+                                        "prompt_injection",
+                                        "other"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "Why the submission was classified as spam. Null unless the verdict is spam."
+                                },
+                                "state": {
+                                  "type": "string",
+                                  "enum": [
+                                    "pending",
+                                    "completed",
+                                    "failed",
+                                    "timed_out"
+                                  ]
+                                },
+                                "verdict": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "spam",
+                                        "not_spam"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "Null until the check completes. Failed and timed-out checks have no verdict."
+                                }
+                              },
+                              "required": [
+                                "category",
+                                "state",
+                                "verdict"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The AI spam check of this submission, or null when it was not checked."
+                        },
                         "createdAt": {
                           "type": "string"
                         },
@@ -52117,6 +52913,27 @@
                             }
                           ]
                         },
+                        "processingState": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "complete"
+                          ],
+                          "description": "pending while checks run. Deliveries wait and the submission cannot be changed until it is complete."
+                        },
+                        "spamMarkedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "When the submission was marked as spam. Null unless its status is SPAM."
+                        },
                         "status": {
                           "type": "string",
                           "enum": [
@@ -52142,6 +52959,7 @@
                         "valuesJson": {}
                       },
                       "required": [
+                        "aiSpamCheck",
                         "createdAt",
                         "formId",
                         "formSchemaVersion",
@@ -52149,6 +52967,8 @@
                         "metadataJson",
                         "notes",
                         "origin",
+                        "processingState",
+                        "spamMarkedAt",
                         "status",
                         "updatedAt",
                         "userAgent",
@@ -52435,6 +53255,69 @@
                     "data": {
                       "type": "object",
                       "properties": {
+                        "aiSpamCheck": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "category": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "promotional",
+                                        "scam",
+                                        "malicious_links",
+                                        "gibberish",
+                                        "abusive",
+                                        "prompt_injection",
+                                        "other"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "Why the submission was classified as spam. Null unless the verdict is spam."
+                                },
+                                "state": {
+                                  "type": "string",
+                                  "enum": [
+                                    "pending",
+                                    "completed",
+                                    "failed",
+                                    "timed_out"
+                                  ]
+                                },
+                                "verdict": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "spam",
+                                        "not_spam"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "Null until the check completes. Failed and timed-out checks have no verdict."
+                                }
+                              },
+                              "required": [
+                                "category",
+                                "state",
+                                "verdict"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The AI spam check of this submission, or null when it was not checked."
+                        },
                         "createdAt": {
                           "type": "string"
                         },
@@ -52477,6 +53360,27 @@
                             }
                           ]
                         },
+                        "processingState": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "complete"
+                          ],
+                          "description": "pending while checks run. Deliveries wait and the submission cannot be changed until it is complete."
+                        },
+                        "spamMarkedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "When the submission was marked as spam. Null unless its status is SPAM."
+                        },
                         "status": {
                           "type": "string",
                           "enum": [
@@ -52502,6 +53406,7 @@
                         "valuesJson": {}
                       },
                       "required": [
+                        "aiSpamCheck",
                         "createdAt",
                         "formId",
                         "formSchemaVersion",
@@ -52509,6 +53414,8 @@
                         "metadataJson",
                         "notes",
                         "origin",
+                        "processingState",
+                        "spamMarkedAt",
                         "status",
                         "updatedAt",
                         "userAgent",
@@ -52726,6 +53633,19 @@
         "parameters": [
           {
             "schema": {
+              "description": "Include submissions whose checks are still running. They are read-only and their deliveries have not been sent. Excluded by default.",
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "in": "query",
+            "name": "includePending",
+            "description": "Include submissions whose checks are still running. They are read-only and their deliveries have not been sent. Excluded by default."
+          },
+          {
+            "schema": {
               "type": "string",
               "minLength": 1
             },
@@ -52758,6 +53678,69 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "aiSpamCheck": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "category": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "promotional",
+                                          "scam",
+                                          "malicious_links",
+                                          "gibberish",
+                                          "abusive",
+                                          "prompt_injection",
+                                          "other"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "description": "Why the submission was classified as spam. Null unless the verdict is spam."
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "enum": [
+                                      "pending",
+                                      "completed",
+                                      "failed",
+                                      "timed_out"
+                                    ]
+                                  },
+                                  "verdict": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "spam",
+                                          "not_spam"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "description": "Null until the check completes. Failed and timed-out checks have no verdict."
+                                  }
+                                },
+                                "required": [
+                                  "category",
+                                  "state",
+                                  "verdict"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The AI spam check of this submission, or null when it was not checked."
+                          },
                           "createdAt": {
                             "type": "string"
                           },
@@ -52800,6 +53783,27 @@
                               }
                             ]
                           },
+                          "processingState": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "complete"
+                            ],
+                            "description": "pending while checks run. Deliveries wait and the submission cannot be changed until it is complete."
+                          },
+                          "spamMarkedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "When the submission was marked as spam. Null unless its status is SPAM."
+                          },
                           "status": {
                             "type": "string",
                             "enum": [
@@ -52825,6 +53829,7 @@
                           "valuesJson": {}
                         },
                         "required": [
+                          "aiSpamCheck",
                           "createdAt",
                           "formId",
                           "formSchemaVersion",
@@ -52832,6 +53837,8 @@
                           "metadataJson",
                           "notes",
                           "origin",
+                          "processingState",
+                          "spamMarkedAt",
                           "status",
                           "updatedAt",
                           "userAgent",
@@ -55024,7 +56031,8 @@
                               "FAILED",
                               "SUCCEEDED",
                               "ABANDONED",
-                              "CANCELED"
+                              "CANCELED",
+                              "SUPPRESSED"
                             ]
                           },
                           "submissionId": {

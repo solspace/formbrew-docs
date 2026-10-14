@@ -6,7 +6,7 @@ description: "Catalog of Management API resources and their behavior."
 This page summarizes the Management API resources. For complete request and response schemas, see the endpoint pages in this section or the [Management API OpenAPI document](https://api.formbrew.com/management/v1/openapi.json).
 
 <Note>
-  The dashboard can call every operation here, subject to your role. [Management tokens](/agents/managed-mode) can call the form, field, allowed origin, form status, public form token, email settings, and submission operations, except viewing and restoring trash and exporting, within their permissions. See [Management API overview](/api-reference/management-overview#authentication).
+  The dashboard can call every operation here, subject to your role. [Management tokens](/agents/managed-mode) can call the form, field, allowed origin, form status, public form token, email settings, and submission operations, except viewing spam, viewing and restoring trash, and exporting, within their permissions. See [Management API overview](/api-reference/management-overview#authentication).
 </Note>
 
 Paths are relative to `https://api.formbrew.com/management/v1`. Unless noted, operations require the `X-Workspace-ID` header.
@@ -77,12 +77,15 @@ Token responses include the complete publishable `tokenValue`, status, expiratio
 | `GET` | `/forms/{formId}/submissions/{submissionId}` | Gets one submission, including an archived submission. |
 | `PATCH` | `/forms/{formId}/submissions/{submissionId}` | Updates the status, internal notes, or both. |
 | `POST` | `/forms/{formId}/submissions/trash` | Moves the listed submissions (1 to 100) to trash, or none of them if any ID is unknown. |
+| `GET` | `/forms/{formId}/submissions/spam` | Lists up to 500 submissions marked as spam that aren't in trash, most recently marked first, with who marked them and when they move to trash. |
 | `GET` | `/forms/{formId}/submissions/trash` | Lists trashed submissions with who deleted them and when they will be permanently deleted. |
 | `POST` | `/forms/{formId}/submissions/restore` | Restores the listed trashed submissions with their status and notes. |
 
 You can't change submitted values, metadata, request origin, user agent, or form schema version. Status accepts `NEW`, `REVIEWED`, `SPAM`, or `ARCHIVED`. Archiving hides a submission from the list and export but doesn't prevent direct retrieval.
 
 Trashed submissions are excluded from every list, read, and export, and are permanently deleted 30 days after they were trashed unless restored. See [Submissions](/dashboard-guide/submissions#delete-submissions).
+
+Submissions with the `SPAM` status have a `spamMarkedAt` time. Formbrew moves them to trash 30 days after that, and the trash entry's `deletedBy.system` is `spam_retention`. Restoring spam returns it with `SPAM` status and a new `spamMarkedAt`. See [Spam](/dashboard-guide/submissions#spam).
 
 Exporting requires the owner, admin, or editor role, or the export capability on your membership.
 
