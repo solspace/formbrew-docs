@@ -32,7 +32,7 @@ bun add @formbrew/react
 ```
 </CodeGroup>
 
-The current version is `0.4.0`. It depends on the matching `@formbrew/js` version, which your package manager installs automatically.
+The current version is `0.5.0`. It depends on the matching `@formbrew/js` version, which your package manager installs automatically.
 
 ## Managed form
 
@@ -132,7 +132,7 @@ Both hooks ignore stale responses and abort pending requests when the client cha
 
 ## Render fields in your own form
 
-`FormbrewFields` renders the complete field array with the same default components and slots as the managed form, with Hidden inputs first. Your form owns submission, status, the honeypot, and form-level checks such as checkbox-group counts:
+`FormbrewFields` renders the complete field array with the same default components and slots as the managed form. Hidden inputs come first, and every other field renders in the form builder's rows, each a `.fb-row` element. Your form owns submission, status, the honeypot, and form-level checks such as checkbox-group counts:
 
 {/* docs-check: typecheck */}
 ```tsx

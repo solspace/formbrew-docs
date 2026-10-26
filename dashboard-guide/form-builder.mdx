@@ -63,10 +63,12 @@ Drag a field in the preview to move it. You can grab it anywhere. On a touchscre
 - Drop it between rows to place it on its own row.
 - Drop it next to another field to place both fields in the same row.
 
-A row can contain up to five fields. Fields in a row share the row width equally in the preview.
+A row can contain up to five fields. Fields in a row share the row width equally.
+
+The hosted embed and the managed JavaScript and React renderers show the same rows on your website. When a form is narrower than 30rem, which is 480px at the default font size, each field takes its own line.
 
 <Note>
-  The hosted embed and the managed JavaScript and React renderers currently show each field on its own full-width line. They follow the builder order: rows from top to bottom, and fields in a row from left to right.
+  Versions before `0.5.0` show each field on its own full-width line, in the builder order. Upgrade the [SDK or embed](/integrations/overview#package-versions) to show rows.
 </Note>
 
 ## Delete fields

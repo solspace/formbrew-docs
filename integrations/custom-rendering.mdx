@@ -58,7 +58,35 @@ export async function describeForm(): Promise<string[]> {
 }
 ```
 
-Use `rowIndex` and `columnIndex` if you want to follow the layout from the form builder. `@formbrew/js` also exports type guards such as `isChoiceField()`, `isDateTimeField()`, `isHiddenField()`, `isConfirmField()`, and `isContentField()`.
+`@formbrew/js` also exports type guards such as `isChoiceField()`, `isDateTimeField()`, `isHiddenField()`, `isConfirmField()`, and `isContentField()`.
+
+## Follow the builder layout
+
+Fields carry their position from the form builder in `rowIndex` and `columnIndex`. `getFieldLayout()` from `@formbrew/js/form` arranges them the way the builder and the managed renderers show them:
+
+{/* docs-check: typecheck */}
+```ts
+import { createFormbrewClient } from "@formbrew/js";
+import { getFieldLayout } from "@formbrew/js/form";
+
+const client = createFormbrewClient({ token: "YOUR_PUBLIC_FORM_TOKEN" });
+
+export async function describeRows(): Promise<string[]> {
+  const definition = await client.fetchForm();
+  const { hiddenFields, rows } = getFieldLayout(definition.fields);
+
+  return [
+    `${hiddenFields.length} hidden inputs`,
+    ...rows.map((row) => row.fields.map((field) => field.label).join(" | ")),
+  ];
+}
+```
+
+- `hiddenFields` contains the Hidden fields. Render them as hidden inputs outside the layout; their row numbers are separate from the visible rows.
+- `rows` contains every other field. Rows follow `rowIndex`, and each row's fields follow `columnIndex`.
+- A row holds up to five fields, like a builder row.
+
+The managed renderers render each row as a `.fb-row` element whose fields share its width equally.
 
 ## Field contract
 
@@ -186,6 +214,7 @@ Framework-neutral helpers are available from `@formbrew/js/form`:
 | `synchronizeConfirmFields(form, fields)` | Sets custom validity on Confirm controls that do not match their targets. |
 | `getCheckboxGroupValidationMessage(field, selectedCount)` | Returns the selection-count message, or an empty string when the count is valid. |
 | `getNumberInputConstraints(validation)` | Returns native `min`, `max`, and `step` values that do not exclude server-valid numbers. |
+| `getFieldLayout(fields)` | Returns the Hidden fields and the form builder's rows. See [Follow the builder layout](#follow-the-builder-layout). |
 | `resolveFormbrewMetadata(metadata)` | Resolves a metadata object or callback. |
 
 {/* docs-check: typecheck */}

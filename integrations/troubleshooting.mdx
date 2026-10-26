@@ -39,7 +39,7 @@ Definition requests count toward the [request limits](/integrations/submissions-
 To check the hosted embed file and its integrity value:
 
 ```bash
-curl --silent --location https://cdn.jsdelivr.net/npm/@formbrew/embed@0.4.0/dist/embed.js \
+curl --silent --location https://cdn.jsdelivr.net/npm/@formbrew/embed@0.5.0/dist/embed.js \
   | openssl dgst -sha384 -binary | openssl base64 -A
 ```
 
@@ -127,7 +127,7 @@ The workspace cannot accept more submissions on its current plan. Definition req
 
 **Error:** `FormbrewError` with code `InvalidResponse` and message `Formbrew returned an invalid response.`, usually with status `200`
 
-The SDK or embed version is older than the form's features. Forms with Date/Time, Hidden, Confirm, or Content fields, multiline Text, or Number sign and decimal settings need version `0.4.0`. Upgrade `@formbrew/js` or `@formbrew/react`, or update the embed script URL and integrity together.
+The SDK or embed version is older than the form's features. Forms with Date/Time, Hidden, Confirm, or Content fields, multiline Text, or Number sign and decimal settings need version `0.4.0` or later. Upgrade `@formbrew/js` or `@formbrew/react`, or update the embed script URL and integrity together.
 
 ### Content Security Policy blocks
 
