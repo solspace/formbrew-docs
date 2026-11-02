@@ -42,6 +42,10 @@
               "dashboard-guide/agent-access",
               "dashboard-guide/usage"
             ]
+          },
+          {
+            "group": "Legal",
+            "pages": ["legal/subprocessors"]
           }
         ]
       },

@@ -1,0 +1,15 @@
+---
+title: "Subprocessors"
+description: "The third parties that process data to run Formbrew."
+---
+
+Formbrew uses these subprocessors to run the service. Each one processes data only to provide its part of it.
+
+| Subprocessor | Purpose | Data | Location |
+| --- | --- | --- | --- |
+| [Railway](https://railway.com) | Hosting for the API, the dashboard, the database, and caches | All Formbrew data, including accounts, forms, and submissions | United States |
+| [Auth0](https://auth0.com), by Okta | Sign-in and account security | Your account's email address, name, and sign-in records | United States |
+| [Resend](https://resend.com) | Account email, such as invitations and ownership transfers | Recipients' email addresses and the email content | United States |
+| [Better Stack](https://betterstack.com) | Logs, traces, error tracking, and uptime monitoring | Record IDs, error details, and the browser's user agent. Formbrew doesn't send submission values or IP addresses. | United States |
+
+Last updated November 2, 2026.
