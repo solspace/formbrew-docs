@@ -90,7 +90,11 @@ An accepted request returns `201`. The `message` value is the form's success mes
 
 {/* docs-check: production-setting email.delivery */}
 
-Formbrew stores an accepted submission, counts it toward your workspace's monthly usage, and queues it for each active [webhook](/webhooks/overview) endpoint on the form. Delivery happens after the response, so a delivery failure never changes an accepted submission.
+Formbrew stores an accepted submission, counts it toward your workspace's monthly usage, and queues the form's [email notifications](/dashboard-guide/email-notifications) and a delivery for each active [webhook](/webhooks/overview) endpoint. Delivery happens after the response, so a delivery failure never changes an accepted submission.
+
+{/* docs-check: production-setting ai-spam-check */}
+
+If the workspace uses the [AI spam check](/dashboard-guide/ai-spam-check), those deliveries wait until the check finishes, and Formbrew doesn't send them for spam.
 
 <Note>
   The Public API doesn't support idempotency keys. If you repeat a request that Formbrew already accepted, it creates another submission.

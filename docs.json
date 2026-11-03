@@ -31,6 +31,8 @@
             "pages": [
               "dashboard-guide/public-access",
               "dashboard-guide/submissions",
+              "dashboard-guide/email-notifications",
+              "dashboard-guide/ai-spam-check",
               "dashboard-guide/webhooks"
             ]
           },

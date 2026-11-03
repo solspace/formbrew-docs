@@ -116,7 +116,7 @@ Owners and administrators can review changes in **Activity**. Each entry shows t
 
 {/* docs-check: production-setting email.delivery */}
 
-With `email:edit`, a token can turn owner notifications on or off, choose the email field the autoresponder replies to, and change the autoresponder's subject and copy. It cannot add recipients: owner notifications go only to the workspace's verified primary recipient, and the autoresponder only replies to the address the submitter entered. Autoresponders remain limited to plans that include them, and enabling one on another plan returns `403` with `FeatureNotAvailable`.
+With `email:edit`, a token can turn owner notifications on or off, choose the email field the autoresponder replies to, and change the autoresponder's subject and copy. It cannot add, remove, or change [recipients](/dashboard-guide/email-notifications#recipients); only the dashboard can. The autoresponder only replies to the address the submitter entered. Autoresponders remain limited to plans that include them, and enabling one on another plan returns `403` with `FeatureNotAvailable`.
 
 Email settings depend on the response field. Removing it, or changing it to a type other than Email, requires both `forms:edit` and `email:edit`:
 

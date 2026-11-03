@@ -89,6 +89,21 @@ Submissions with the `SPAM` status have a `spamMarkedAt` time. Formbrew moves th
 
 Exporting requires the owner, admin, or editor role, or the export capability on your membership.
 
+{/* docs-check: production-setting ai-spam-check */}
+
+While the [AI spam check](/dashboard-guide/ai-spam-check) runs, a submission's `processingState` is `pending`. Lists and exports leave it out unless you pass `includePending=true`, and changing its status, notes, or trash state returns `409` with `SUBMISSION_PENDING_CHECKS`. Every submission includes `aiSpamCheck`, which is `null` when it wasn't checked.
+
+## AI spam check
+
+{/* docs-check: production-setting ai-spam-check */}
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| `GET` | `/workspace/ai-spam-check` | Gets the workspace setting. |
+| `PUT` | `/workspace/ai-spam-check` | Turns the check on or off. Owners and admins only, in the dashboard. |
+| `GET` | `/forms/{formId}/ai-spam-check` | Gets whether the form is checked. |
+| `PATCH` | `/forms/{formId}/ai-spam-check` | Opts the form in or out. |
+
 ## Usage and plan
 
 | Method | Path | Behavior |
@@ -113,7 +128,11 @@ Your plan limits how many enabled endpoints each form can have; disabled endpoin
 
 Disabling, deleting, changing the URL of, or rotating the secret of an endpoint cancels its pending and failed deliveries. Other delivery records are unaffected.
 
-Delivery statuses are `PENDING`, `PROCESSING`, `FAILED`, `SUCCEEDED`, `ABANDONED`, and `CANCELED`. The only event type is `submission.created`. See [Receive webhooks](/webhooks/overview).
+Delivery statuses are `PENDING`, `PROCESSING`, `FAILED`, `SUCCEEDED`, `ABANDONED`, `CANCELED`, and `SUPPRESSED`. The only event type is `submission.created`. See [Receive webhooks](/webhooks/overview).
+
+{/* docs-check: production-setting ai-spam-check */}
+
+`SUPPRESSED` means the AI spam check marked the submission as spam, so Formbrew held the delivery back. If someone marks it **Not spam**, the delivery is sent.
 
 ## Email settings
 
@@ -121,6 +140,10 @@ Delivery statuses are `PENDING`, `PROCESSING`, `FAILED`, `SUCCEEDED`, `ABANDONED
 | --- | --- | --- |
 | `GET` | `/forms/{formId}/email-settings` | Gets the form's owner notification, response-email field, and autoresponder settings. |
 | `PATCH` | `/forms/{formId}/email-settings` | Updates one or more of those settings. |
+
+{/* docs-check: production-setting email.delivery */}
+
+Tokens can read a form's recipients but can't add, remove, or change them; only the dashboard can. See [Email notifications](/dashboard-guide/email-notifications).
 
 ## Agent access and activity
 

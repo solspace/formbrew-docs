@@ -1,0 +1,73 @@
+---
+title: "AI spam check"
+description: "Check new submissions with an AI model and keep spam out of your inbox, notifications, and webhooks."
+---
+
+{/* docs-check: production-setting ai-spam-check */}
+
+The AI spam check reads each new submission and moves spam to **Spam** before Formbrew sends any notification, autoresponder, or webhook for it. Submitters never wait: Formbrew accepts the submission at once and checks it afterward.
+
+The AI spam check is available on the Indie, Pro, and Scale plans. It is off until an owner or admin turns it on.
+
+## Turn on the AI spam check
+
+1. Open **Settings** for the workspace.
+2. Under **AI spam check**, read how submissions are processed.
+3. Select the acceptance checkbox, then select **Turn on the AI spam check**.
+
+Formbrew records who accepted the notice and when. Agents and management tokens can't turn the check on or off. Select **Turn off** to stop checking new submissions; submissions already being checked finish normally.
+
+### What is sent for checking
+
+When the check is on, Formbrew sends each new submission to an AI model run by Anthropic, one of Formbrew's [subprocessors](/legal/subprocessors). The model only classifies the submission as spam or not spam. Formbrew sends:
+
+- The form name.
+- Every answer with its field label and type, including hidden fields.
+- The submitter's browser user agent.
+
+Formbrew doesn't send request metadata, origins, IDs, or workspace details. Long answers are shortened. Anthropic doesn't use the content to train models and keeps it for up to 30 days.
+
+### Opt a form out
+
+Every form in the workspace is checked unless it opts out. Open the form, select the form settings, and clear **Check this form's submissions** under **AI spam check**. The change applies to new submissions at once. Owners, admins, and editors can change it.
+
+## While a submission is checked
+
+A checked submission shows **Pending checks** for a few seconds, and at most about two minutes:
+
+- Its owner notification, autoresponder, and webhooks wait.
+- You can open it, but you can't change its status or notes or move it to trash.
+- It doesn't appear in Management API lists or exports unless you ask for it with `includePending=true`.
+
+If the check can't finish in time, Formbrew releases the submission as a normal submission and sends its deliveries.
+
+## When a submission is spam
+
+Formbrew moves it to **Spam** with a reason: promotional, scam, malicious links, gibberish, abusive, prompt injection, or other. Its notifications, autoresponder, and webhooks aren't sent, and it doesn't count toward your monthly submissions.
+
+If a real message was marked as spam, select **Not spam** in the **Spam** view. Formbrew returns it to the inbox, counts it toward your usage, and sends its owner notification and webhooks. The submitter doesn't receive a late autoresponder. The same happens when an agent changes the status of a submission the AI marked as spam.
+
+Submissions you mark as spam yourself still count toward usage. Spam moves to Trash 30 days after it was marked, whoever marked it. See [Spam](/dashboard-guide/submissions#spam).
+
+## Monthly checks
+
+Each plan includes as many AI checks per month as its submission hard limit: 2,200 on Indie, 11,000 on Pro, and 55,000 on Scale. A check that fails or times out doesn't use one.
+
+When a workspace uses all of its checks, the **Spam** view and each form's settings show **AI spam checks paused until** the first day of the next month. Until then, new submissions are accepted, delivered, and counted without a check.
+
+## In the Management API and MCP
+
+Submission responses include:
+
+| Field | Meaning |
+| --- | --- |
+| `processingState` | `pending` while checks run, otherwise `complete`. |
+| `aiSpamCheck` | `state` (`pending`, `completed`, `failed`, or `timed_out`), `verdict` (`spam` or `not_spam`), and `category`. `null` when the submission wasn't checked. |
+| `spamMarkedAt` | When the submission was marked as spam. |
+
+Changing the status, notes, or trash state of a pending submission returns `409 SUBMISSION_PENDING_CHECKS`; try again shortly. Webhook deliveries held back for spam have the `SUPPRESSED` status. Webhook payloads and emails never include check results.
+
+## Current limitations
+
+- Spam counts toward usage until its verdict arrives, a few seconds after acceptance. During a spam wave, a workspace at its hard limit can briefly reject real submissions with `402 PLAN_LIMIT_REACHED`.
+- You can't add your own instructions, allow trusted senders, or check older submissions again.

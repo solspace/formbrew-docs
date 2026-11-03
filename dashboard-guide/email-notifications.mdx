@@ -1,0 +1,93 @@
+---
+title: "Email notifications"
+description: "Choose who receives new-submission emails and customize their subject and sender name."
+---
+
+{/* docs-check: production-setting email.delivery */}
+
+Formbrew can email you every time a form receives a submission. Open a form and select **Emails** to manage these owner notifications.
+
+## Recipients
+
+Every form has a primary recipient. It starts as the workspace owner's account email and follows that email if it changes. Owners and admins can change or add recipients. Editors and viewers can see recipients but cannot change them.
+
+### Change the primary recipient
+
+You can change the primary recipient on every plan, for example after a workspace is transferred to you.
+
+1. Under **Owner notifications**, select **Change** next to the primary recipient.
+2. Enter the new address and select **Change recipient**.
+
+If you enter the workspace owner's account email, or an address that has already confirmed for this form, the change applies at once. Any other address receives a confirmation link first. Until it is confirmed, notifications keep going to the current primary recipient. To keep the current recipient, select **Cancel change**.
+
+Once you change the primary recipient to another address, it no longer follows the owner's account email. Change it back to the owner's email to follow it again.
+
+The primary recipient cannot be removed.
+
+### Add a recipient
+
+On Pro and Scale, you can add more recipients, for example a client who should receive their form's submissions.
+
+1. Under **Owner notifications**, enter an email address in **Add a recipient**.
+2. Select **Add recipient**.
+
+Formbrew emails the address a confirmation link. The recipient receives notifications only after they select **Confirm email address** on the linked page. They don't need a Formbrew account. The link expires after 72 hours and works once.
+
+If the link expires or the email doesn't arrive, select **Resend link**. Sending a new link makes the previous one stop working. You can resend once per minute.
+
+To stop sending notifications to a recipient, select **Remove**. Notifications that have not been sent yet are canceled.
+
+### Confirmation email limits
+
+Each form can send 3 confirmation emails per hour and 10 per day. A workspace can send 20 per day across all of its forms, and 5 per day to the same address. Requests that fail, such as adding an address that is already a recipient, don't count.
+
+### Recipient statuses
+
+| Status | Meaning |
+| --- | --- |
+| **Active** | Receives a notification for every new submission. |
+| **Awaiting confirmation** | Formbrew sent a confirmation link that has not been used yet. |
+| **Link expired** | The confirmation link expired. Resend it to continue. |
+| **Paused (plan limit)** | Confirmed, but over your plan's recipient limit. |
+| **Delivery blocked** | Formbrew stopped sending to this address after delivery problems. |
+| **Inactive** | The owner's account email is not verified. |
+
+### Recipient limits
+
+Your workspace plan sets how many recipients each form can have. The limit includes the primary recipient and recipients awaiting confirmation. A pending change of the primary recipient doesn't count.
+
+| Plan | Recipients per form |
+| --- | --- |
+| Free | 1 |
+| Indie | 1 |
+| Pro | 3 |
+| Scale | 10 |
+
+If your plan's limit drops below the number of confirmed recipients, the most recently confirmed recipients are paused. Paused recipients resume automatically after an upgrade. Notifications already queued before the change are still sent.
+
+## Delivery problems
+
+If an address bounces permanently or its owner reports a notification as spam, Formbrew stops emailing that address from your workspace. Other workspaces are not affected.
+
+If delivery problems put your workspace's email at risk, Formbrew pauses email from your forms and emails the workspace owner. Your forms keep accepting submissions, and you can see them in the dashboard. Notifications that can't be sent within 23 hours of a submission are not sent later.
+
+## Subject and sender name
+
+On Indie, Pro, and Scale you can customize owner notifications:
+
+| Setting | Requirement |
+| --- | --- |
+| Subject | Up to 200 characters, on one line. Leave empty to use `New submission to <form name>`. |
+| Sender name | Up to 100 characters, without quotes, angle brackets, backslashes, or `@`. Leave empty to use Formbrew. |
+
+The sending address does not change. Select **Save changes** to apply them.
+
+If your workspace moves to the Free plan, saved values are kept but notifications use the defaults until you upgrade. Select **Clear saved values** to remove them.
+
+## Management API
+
+`GET /forms/{formId}/email-settings` returns `recipients`, `recipientLimit`, and an `ownerNotification` object with `subject`, `fromName`, and `customizationAvailable`. Each recipient includes `primary`, `followsOwner`, `replacesPrimary`, and `status`.
+
+`PATCH /forms/{formId}/email-settings` accepts `ownerNotification: { subject, fromName }`. Send `null` to restore a default. Setting a value on a plan without customization returns `403` with `FeatureNotAvailable`.
+
+Recipients can only be added, removed, changed, or sent a new link from the dashboard. Management tokens and agents can read recipients but cannot change them.

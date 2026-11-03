@@ -28,14 +28,28 @@ Formbrew records usage when it stores an accepted submission. These requests do 
 
 Changing a submission's status to **Spam** or **Archived** does not reduce usage. A new period starts on the first day of each month, in UTC.
 
+{/* docs-check: production-setting ai-spam-check */}
+
+Spam that the [AI spam check](/dashboard-guide/ai-spam-check) catches doesn't count. If you return it to the inbox with **Not spam**, it counts then.
+
 ## Plans
 
 Your workspace plan sets the included submissions, grace allowance, active webhook endpoints per form, and team seats.
 
-The **Subscriptions** page shows the workspace's current plan. Only the workspace owner and members with the **Manage billing** permission can open it. See [Members and roles](/dashboard-guide/members).
+## Subscriptions
 
-## Current limitations
+The **Subscriptions** page shows the workspace's current plan. Only the workspace owner and members with the **Manage billing** permission can open it. See [Members and roles](/dashboard-guide/members).
 
 {/* docs-check: production-setting billing.purchases */}
 
-You cannot currently purchase or change a plan in the dashboard. Invoices, payment controls, and historical usage charts are not available.
+Only the workspace owner can subscribe:
+
+1. Open **Subscriptions** and choose Indie, Pro, or Scale. Each is a monthly workspace subscription.
+2. Select **Subscribe to** the plan, then pay in Stripe Checkout.
+3. Back in Formbrew, the page shows **Confirming your subscription** until Stripe confirms it. The Free plan stays active until then.
+
+Once the subscription is active, the owner can select **Manage subscription** to manage the plan, payment details, and invoices in Stripe's billing portal.
+
+## Current limitations
+
+Historical usage charts are not available.

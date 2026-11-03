@@ -5,11 +5,18 @@ description: "The third parties that process data to run Formbrew."
 
 Formbrew uses these subprocessors to run the service. Each one processes data only to provide its part of it.
 
+{/* docs-check: production-setting email.delivery */}
+{/* docs-check: production-setting ai-spam-check */}
+{/* docs-check: production-setting billing.purchases */}
+
 | Subprocessor | Purpose | Data | Location |
 | --- | --- | --- | --- |
-| [Railway](https://railway.com) | Hosting for the API, the dashboard, the database, and caches | All Formbrew data, including accounts, forms, and submissions | United States |
+| [Amazon Web Services](https://aws.amazon.com) | Form submission email through Amazon SES: owner notifications and autoresponders | Recipients' email addresses and the email content, which includes submitted values | United States |
+| [Anthropic](https://www.anthropic.com) | The [AI spam check](/dashboard-guide/ai-spam-check), only for workspaces that turn it on | The form name, the submitted answers with their field labels and types, and the submitter's browser user agent. Anthropic doesn't use them to train models and keeps them for up to 30 days. | United States |
 | [Auth0](https://auth0.com), by Okta | Sign-in and account security | Your account's email address, name, and sign-in records | United States |
-| [Resend](https://resend.com) | Account email, such as invitations and ownership transfers | Recipients' email addresses and the email content | United States |
 | [Better Stack](https://betterstack.com) | Logs, traces, error tracking, and uptime monitoring | Record IDs, error details, and the browser's user agent. Formbrew doesn't send submission values or IP addresses. | United States |
+| [Railway](https://railway.com) | Hosting for the API, the dashboard, the database, and caches | All Formbrew data, including accounts, forms, and submissions | United States |
+| [Resend](https://resend.com) | Account email, such as invitations and ownership transfers | Recipients' email addresses and the email content | United States |
+| [Stripe](https://stripe.com) | Subscriptions and payments | The workspace owner's email address, the workspace ID, and the billing and payment details entered in Stripe | United States |
 
-Last updated November 2, 2026.
+Last updated November 3, 2026.

@@ -46,7 +46,7 @@ Every active member, including the owner, uses one seat. Each pending invitation
 {/* docs-check: production-setting billing.purchases */}
 
 <Warning>
-  New workspaces start on the Free plan, which includes one seat. The owner uses that seat, so you cannot invite members to a Free workspace. Plans with more seats are not available for purchase yet.
+  New workspaces start on the Free plan, which includes one seat. The owner uses that seat, so you cannot invite members to a Free workspace. Indie also includes one seat, Pro includes 3, and Scale 10. The owner can subscribe on the [**Subscriptions**](/dashboard-guide/usage#subscriptions) page.
 </Warning>
 
 When a workspace has no free seat, inviting a member fails with **Every team seat is in use**.
@@ -121,3 +121,7 @@ Only the owner can transfer ownership. Open workspace settings and use **Transfe
 A transfer to an email address sends a link that expires after seven days. The recipient must sign in with that verified email address and select **Accept ownership**. The address cannot belong to a current member. While the transfer is pending, you can select **Resend** or **Cancel transfer**. A workspace can have only one pending transfer.
 
 If you want to stay in the workspace after an email transfer, the workspace needs a free seat for the new owner. Otherwise, **Leave workspace** is the only option.
+
+{/* docs-check: production-setting email.delivery */}
+
+After a transfer, the new owner can change any form's primary email recipient. See [Change the primary recipient](/dashboard-guide/email-notifications#change-the-primary-recipient).
