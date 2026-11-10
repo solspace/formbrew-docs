@@ -49,7 +49,7 @@ The output must equal the part of the `integrity` attribute after `sha384-`.
 
 ### Origin rejected
 
-**Response:** `403` `Forbidden`, `Origin is not allowed for this form.`
+**Response:** `403` `FORBIDDEN`, `Origin is not allowed for this form.`
 
 The request origin is not one of the form's [allowed origins](/integrations/public-access#allowed-origins). Compare the page's exact origin with the list in **Public access**:
 
@@ -64,7 +64,7 @@ The response is readable JSON rather than a CORS error because the Public API an
 
 ### Form deactivated
 
-**Response:** `403` `FormDeactivated`, `This form is not accepting submissions.`
+**Response:** `403` `FORM_DEACTIVATED`, `This form is not accepting submissions.`
 
 Someone deactivated the form. Its fields, allowed origins, and tokens are unchanged. To serve it again, open **Layout**, set **Status** to **Active**, and select **Save changes**. See [Activate or deactivate a form](/dashboard-guide/forms#activate-or-deactivate-a-form).
 
@@ -72,26 +72,26 @@ The hosted embed and the managed JavaScript and React forms show this message in
 
 ### Form not found
 
-**Response:** `404` `NotFound`, `Token not found.` or `Form not found.`
+**Response:** `404` `NOT_FOUND`, `Token not found.` or `Form not found.`
 
 - `Token not found.`: the token is misspelled or truncated. Copy it again from **Public access**.
 - `Form not found.`: the form is archived, or its workspace is no longer active. [Restore the form](/dashboard-guide/forms#restore-an-archived-form), then activate it.
 
 ### Token revoked or expired
 
-**Response:** `401` `Unauthorized`, `Token has been revoked.` or `Token has expired.`
+**Response:** `401` `UNAUTHORIZED`, `Token has been revoked.` or `Token has expired.`
 
 Generate a new token in **Public access**, deploy it, and remove the old token from your code.
 
 ### Rate limited
 
-**Response:** `429` `RateLimitExceeded`, or `503` `RateLimitUnavailable`
+**Response:** `429` `RATE_LIMIT_EXCEEDED`, or `503` `RATE_LIMIT_UNAVAILABLE`
 
 The client exceeded a [request limit](/integrations/submissions-and-errors#request-limits), or rate limiting was temporarily unavailable. Stop automatic retries and try again later. If your server fetches definitions for server rendering, cache the result: all of your server's requests share one IP address.
 
 ### Validation errors
 
-**Response:** `400` `ValidationError`
+**Response:** `400` `VALIDATION_ERROR`
 
 The `message` describes the first problem the API found:
 
@@ -103,13 +103,13 @@ The `message` describes the first problem the API found:
 | `<Label> contains an unknown option value.` | Choice options changed since you copied the markup |
 | `<Label> must match <Target label>.` | A Confirm value differs from its target |
 | `Submission rejected.` | The honeypot input has a value |
-| `File uploads are not supported yet.` | The form contains a file input |
+| `Form field <key> doesn't take files.` | The form contains a file input, and the visitor chose a file |
 
 After you change fields or options, copy the generated HTML again and refresh any cached definitions.
 
 ### Form changed during submission
 
-**Response:** `409` `SchemaVersionConflict`, `The form changed. Reload it and try again.`
+**Response:** `409` `SCHEMA_VERSION_CONFLICT`, `The form changed. Reload it and try again.`
 
 Someone saved a change to the form while Formbrew was processing the submission. Reload the definition, check the values against the current fields, and submit again.
 
@@ -117,7 +117,7 @@ Someone saved a change to the form while Formbrew was processing the submission.
 
 {/* docs-check: production-setting billing.quota-enforcement */}
 
-**Response:** `402` `PlanLimitReached`, `This form is temporarily unable to accept submissions.`
+**Response:** `402` `PLAN_LIMIT_REACHED`, `This form is temporarily unable to accept submissions.`
 
 {/* docs-check: production-setting billing.quota-enforcement */}
 
@@ -125,7 +125,7 @@ The workspace cannot accept more submissions on its current plan. Definition req
 
 ### SDK cannot read the definition
 
-**Error:** `FormbrewError` with code `InvalidResponse` and message `Formbrew returned an invalid response.`, usually with status `200`
+**Error:** `FormbrewError` with code `INVALID_RESPONSE` and message `Formbrew returned an invalid response.`, usually with status `200`
 
 The SDK or embed version is older than the form's features. Forms with Date/Time, Hidden, Confirm, or Content fields, multiline Text, or Number sign and decimal settings need version `0.4.0` or later. Upgrade `@formbrew/js` or `@formbrew/react`, or update the embed script URL and integrity together.
 

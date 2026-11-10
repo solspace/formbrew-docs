@@ -65,11 +65,11 @@ Submission responses include:
 | `aiSpamCheck` | `state` (`pending`, `completed`, `failed`, or `timed_out`), `verdict` (`spam` or `not_spam`), and `category`. `null` when the submission wasn't checked. |
 | `spamMarkedAt` | When the submission was marked as spam. |
 
-Changing the status, notes, or trash state of a pending submission returns `409` with `SubmissionPendingChecks`; try again shortly. Webhook deliveries held back for spam have the `SUPPRESSED` status. Webhook payloads and emails never include check results.
+Changing the status, notes, or trash state of a pending submission returns `409` with `SUBMISSION_PENDING_CHECKS`; try again shortly. Webhook deliveries held back for spam have the `SUPPRESSED` status. Webhook payloads and emails never include check results.
 
 ## Current limitations
 
 {/* docs-check: production-setting billing.quota-enforcement */}
 
-- Spam counts toward usage until its verdict arrives, a few seconds after acceptance. During a spam wave, a workspace at its hard limit can briefly reject real submissions with `402` and `PlanLimitReached`.
+- Spam counts toward usage until its verdict arrives, a few seconds after acceptance. During a spam wave, a workspace at its hard limit can briefly reject real submissions with `402` and `PLAN_LIMIT_REACHED`.
 - You can't add your own instructions, allow trusted senders, or check older submissions again.

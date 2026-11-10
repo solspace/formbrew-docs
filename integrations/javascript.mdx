@@ -208,11 +208,11 @@ export async function submitEmail(email: string): Promise<void> {
 
 | `code` | `status` | Meaning |
 | --- | --- | --- |
-| API error code, such as `ValidationError` or `Forbidden` | HTTP status | The API returned an error response. See [error codes](/integrations/submissions-and-errors#error-codes). |
-| `HttpError` | HTTP status | The response failed without a Formbrew error body. |
-| `NetworkError` | `null` | The request did not reach Formbrew. |
-| `InvalidResponse` | HTTP status | The response was not a valid Formbrew payload, for example a definition that this SDK version cannot read. |
-| `ConfigurationError` | `null` | The token, base URL, origin, values, metadata, target element, or supplied definition is invalid. |
-| `RendererError` | `null` | The DOM renderer failed unexpectedly. |
+| API error code, such as `VALIDATION_ERROR` or `FORBIDDEN` | HTTP status | The API returned an error response. See [error codes](/integrations/submissions-and-errors#error-codes). |
+| `HTTP_ERROR` | HTTP status | The response failed without a Formbrew error body. |
+| `NETWORK_ERROR` | `null` | The request did not reach Formbrew. |
+| `INVALID_RESPONSE` | HTTP status | The response was not a valid Formbrew payload, for example a definition that this SDK version cannot read. |
+| `CONFIGURATION_ERROR` | `null` | The token, base URL, origin, values, metadata, target element, or supplied definition is invalid. |
+| `RENDERER_ERROR` | `null` | The DOM renderer failed unexpectedly. |
 
 `error.details` is present only when the API includes `details`, such as for request validation errors.

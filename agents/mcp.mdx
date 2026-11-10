@@ -107,10 +107,10 @@ If the site uses the hosted embed, also [check the embed script with curl](/inte
 
 | Symptom | Cause |
 | --- | --- |
-| The client reports the server failed to connect, with `401` | The variable is unset or the token is unknown, revoked, or expired. The response's `error` is `Unauthorized`, `ManagementTokenRevoked`, or `ManagementTokenExpired`. Set a valid token and reconnect. |
-| `403` with `ManagementTokenIssuerUnauthorized` | The person who issued the token is no longer an owner or administrator. |
-| `403` with `ManagementTokenWorkspaceMismatch` | The client sends an `X-Workspace-ID` header for a different workspace. The header is optional; remove it or use the token's workspace. |
-| `403` with `OriginNotAllowed` | The request came from a browser. The MCP server only serves agent clients. |
+| The client reports the server failed to connect, with `401` | The variable is unset or the token is unknown, revoked, or expired. The response's `error` is `UNAUTHORIZED`, `MANAGEMENT_TOKEN_REVOKED`, or `ManagementTokenExpired`. Set a valid token and reconnect. |
+| `403` with `MANAGEMENT_TOKEN_ISSUER_UNAUTHORIZED` | The person who issued the token is no longer an owner or administrator. |
+| `403` with `MANAGEMENT_TOKEN_WORKSPACE_MISMATCH` | The client sends an `X-Workspace-ID` header for a different workspace. The header is optional; remove it or use the token's workspace. |
+| `403` with `ORIGIN_NOT_ALLOWED` | The request came from a browser. The MCP server only serves agent clients. |
 | `429` with `Retry-After` | The token sent too many requests in a short time. Wait for the number of seconds in `Retry-After`. |
 | A tool returns an error result | The token lacks a permission, or the request conflicts with the form's current state. The result includes the same `error` and `details` as the Management API. |
 

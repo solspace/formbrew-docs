@@ -31,7 +31,7 @@ Both form endpoints require:
 - An `Origin` header, or a `Referer` header when `Origin` is absent, that matches one of the form's allowed origins.
 - A request within the form's [rate limits](/api-reference/public-requests#rate-limits).
 
-A `DEACTIVATED` form returns `403` with `FormDeactivated`. An archived form returns `404`, the same as an unknown token.
+A `DEACTIVATED` form returns `403` with `FORM_DEACTIVATED`. An archived form returns `404`, the same as an unknown token.
 
 Public form tokens are publishable identifiers, so you can include them in frontend code. They don't grant access to the Management API. See [Tokens and origins](/integrations/public-access) for how tokens and allowed origins work together.
 

@@ -41,7 +41,7 @@ A form's `status` is `ACTIVE`, `DEACTIVATED`, or `ARCHIVED`. Only an `ACTIVE` fo
 
 Setting `status` to `ACTIVE` checks that every field definition is valid. It doesn't require an allowed origin. You can replace origins with an empty array at any time, including on an active form. An empty body (`{}`) also clears the origins.
 
-The definition operation requires `expectedSchemaVersion` and `expectedStatus`. If the form changed since you read it, the request returns `409` with `SchemaVersionConflict`. The operation deletes fields you leave out of the list.
+The definition operation requires `expectedSchemaVersion` and `expectedStatus`. If the form changed since you read it, the request returns `409` with `SCHEMA_VERSION_CONFLICT`. The operation deletes fields you leave out of the list.
 
 Archiving, with `DELETE` or by setting `status` to `ARCHIVED`, removes a form from list and retrieval operations. Every operation on an archived form returns `404`, including its submission operations. Formbrew keeps the submissions. People can [restore an archived form](/dashboard-guide/forms#restore-an-archived-form) in the dashboard, and it returns as `DEACTIVATED`.
 
@@ -91,7 +91,7 @@ Exporting requires the owner, admin, or editor role, or the export capability on
 
 {/* docs-check: production-setting ai-spam-check */}
 
-While the [AI spam check](/dashboard-guide/ai-spam-check) runs, a submission's `processingState` is `pending`. Lists and exports leave it out unless you pass `includePending=true`, and changing its status, notes, or trash state returns `409` with `SubmissionPendingChecks`. Every submission includes `aiSpamCheck`, which is `null` when it wasn't checked.
+While the [AI spam check](/dashboard-guide/ai-spam-check) runs, a submission's `processingState` is `pending`. Lists and exports leave it out unless you pass `includePending=true`, and changing its status, notes, or trash state returns `409` with `SUBMISSION_PENDING_CHECKS`. Every submission includes `aiSpamCheck`, which is `null` when it wasn't checked.
 
 ## AI spam check
 
@@ -124,7 +124,7 @@ The usage response includes the period start (inclusive) and end (exclusive), th
 | `POST` | `/forms/{formId}/webhooks/{webhookId}/rotate-secret` | Replaces the signing secret and returns the new secret once. |
 | `GET` | `/forms/{formId}/webhook-deliveries` | Lists the most recent delivery records, up to `limit`. |
 
-Your plan limits how many enabled endpoints each form can have; disabled endpoints don't count. Creating or enabling an endpoint beyond the limit returns `409` with `WebhookEndpointLimitExceeded`. Endpoint URLs must use HTTPS on port 443, contain no credentials or fragment, and point to public network addresses.
+Your plan limits how many enabled endpoints each form can have; disabled endpoints don't count. Creating or enabling an endpoint beyond the limit returns `409` with `WEBHOOK_ENDPOINT_LIMIT_EXCEEDED`. Endpoint URLs must use HTTPS on port 443, contain no credentials or fragment, and point to public network addresses.
 
 Disabling, deleting, changing the URL of, or rotating the secret of an endpoint cancels its pending and failed deliveries. Other delivery records are unaffected.
 

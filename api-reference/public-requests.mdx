@@ -51,7 +51,7 @@ Repeated names become arrays. Names that begin with `_` become metadata keys wit
 
 ### Multipart
 
-`multipart/form-data` follows the same rules as URL-encoded input. Formbrew accepts text parts and rejects file parts with `400` because file uploads aren't supported.
+`multipart/form-data` follows the same rules as URL-encoded input. Formbrew accepts text parts, up to 1 MiB of them in total, and ignores empty file inputs. It rejects file parts with `400` because file uploads aren't supported.
 
 ### Responses to HTML form posts
 
@@ -75,13 +75,13 @@ See [Fields](/dashboard-guide/fields) for each field's value and validation beha
 
 ```json
 {
-  "error": "ValidationError",
+  "error": "VALIDATION_ERROR",
   "message": "Email must be a valid email address.",
   "requestId": "3ce11e0f-a68a-4130-8d31-b925903efa1f"
 }
 ```
 
-- `error` is a machine-readable error code, such as `ValidationError`, `Forbidden`, or `RateLimitExceeded`.
+- `error` is a machine-readable error code, such as `VALIDATION_ERROR`, `FORBIDDEN`, or `RATE_LIMIT_EXCEEDED`.
 - `message` is a human-readable explanation.
 - `requestId` identifies the request. Every response also returns it in the `X-Request-ID` header.
 - `details` is optional. Request-schema failures include it with the failing properties.
@@ -95,7 +95,7 @@ Errors that occur while reading the body use the same envelope with a framework 
 | `400` | Invalid or malformed body, invalid form values or metadata, a filled honeypot, or a file part |
 | `401` | The public form token is revoked or expired |
 | `402` | The workspace has reached its monthly submission limit (submissions only) |
-| `403` | The origin is missing, malformed, or not allowed, or the form is deactivated (`FormDeactivated`) |
+| `403` | The origin is missing, malformed, or not allowed, or the form is deactivated (`FORM_DEACTIVATED`) |
 | `404` | The token is unknown, the form is archived or unavailable, or the path doesn't exist |
 | `409` | The form changed while the submission was processed (submissions only); fetch the definition and try again |
 | `413` | The request body is larger than 1 MiB |
@@ -111,12 +111,12 @@ For client-side handling, see [Submissions and errors](/integrations/submissions
 | Operation | Scope | Limit |
 | --- | --- | --- |
 | Fetch definition | Form and client IP | 120 per minute |
-| Fetch definition | Form | 10,000 per hour |
+| Fetch definition | Form | 500,000 per hour |
 | Submit | Form and client IP | 10 per minute |
 | Submit | Form and client IP | 100 per hour |
-| Submit | Form | 1,000 per hour |
+| Submit | Form | 5,000 per hour |
 
-Limits use fixed one-minute and one-hour windows. The API doesn't return `Retry-After` or rate-limit headers, so wait before you retry a `429` response.
+Limits use fixed one-minute and one-hour windows. The API doesn't return `Retry-After` or rate-limit headers, so wait before you retry a `429` response. An IPv6 client IP counts as its whole /64 network, so all addresses in it share one per-IP limit.
 
 ## CORS
 

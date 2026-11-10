@@ -60,7 +60,7 @@ The API applies the same checks to `GET` definition requests and `POST` submissi
 
 1. **Request format.** For submissions only, a malformed or oversized body returns `400` or `413` before any other check.
 2. **Token.** Unknown tokens return `404`; revoked or expired tokens return `401`.
-3. **Status.** A deactivated form returns `403` with `FormDeactivated`. An archived form returns `404`.
+3. **Status.** A deactivated form returns `403` with `FORM_DEACTIVATED`. An archived form returns `404`.
 4. **Origin.** An origin missing from the allowed origins returns `403`.
 5. **Rate limit.** Too many requests return `429`.
 6. **Submission checks.** For submissions only: honeypot, field validation, and plan limits.

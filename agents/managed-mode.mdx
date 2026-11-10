@@ -79,11 +79,11 @@ Send an `Idempotency-Key` header when you create a form, a field, or a public fo
 - A key is scoped to the token, the workspace, and the operation. Other tokens and people can't collide with it.
 - A retry with the same key and the same request returns `201` with the resource's current state and an `Idempotency-Replayed: true` header. It never creates a second resource.
 - Concurrent requests with the same key wait for the first one and return the same resource.
-- Reusing a key with a different request, including a different form for public form tokens, returns `422` with `IdempotencyKeyReused`.
-- If the resource no longer exists, a retry returns `409` with `IdempotentResourceUnavailable`.
+- Reusing a key with a different request, including a different form for public form tokens, returns `422` with `IDEMPOTENCY_KEY_REUSED`.
+- If the resource no longer exists, a retry returns `409` with `IDEMPOTENT_RESOURCE_UNAVAILABLE`.
 - Every retry is checked against the token's current state and permissions. A revoked token can't replay a request.
 
-Other operations are safe to retry without a key. Replacing a definition requires `expectedSchemaVersion` and `expectedStatus`, so a retry after success returns `409` with `SchemaVersionConflict` instead of overwriting newer changes. When that happens, read the form again, compare it with what you intended, and ask the user before you save again if someone else changed it. Replacing allowed origins, changing a form's status, and revoking are idempotent.
+Other operations are safe to retry without a key. Replacing a definition requires `expectedSchemaVersion` and `expectedStatus`, so a retry after success returns `409` with `SCHEMA_VERSION_CONFLICT` instead of overwriting newer changes. When that happens, read the form again, compare it with what you intended, and ask the user before you save again if someone else changed it. Replacing allowed origins, changing a form's status, and revoking are idempotent.
 
 ## Errors
 
@@ -91,18 +91,18 @@ Errors use the [standard envelope](/api-reference/management-overview#errors). `
 
 | Status | `error` | Meaning |
 | --- | --- | --- |
-| `401` | `Unauthorized` | The token is missing or unknown. |
-| `401` | `ManagementTokenRevoked` | The token was revoked. Ask the user for a new token. |
+| `401` | `UNAUTHORIZED` | The token is missing or unknown. |
+| `401` | `MANAGEMENT_TOKEN_REVOKED` | The token was revoked. Ask the user for a new token. |
 | `401` | `ManagementTokenExpired` | The token has expired. Ask the user for a new token. |
-| `403` | `ManagementTokenIssuerUnauthorized` | The person who issued the token is no longer an owner or administrator. |
-| `403` | `ManagementTokenWorkspaceMismatch` | `X-Workspace-ID` names a different workspace than the token's. |
-| `403` | `ManagementTokenOperationNotAllowed` | Management tokens can't use this operation. |
-| `403` | `ManagementTokenPermissionDenied` | The token lacks an action. `details.missingActions` lists them, or `details.missingPermission` is `createForms`. |
-| `403` | `EmailDependencyPermissionRequired` | Email settings use the field you're removing or retyping, so the change also needs `email:edit`. Nothing changed. |
-| `404` | `NotFound` | The resource doesn't exist, or the token can't read the form. |
-| `409` | `SchemaVersionConflict` | The form changed after you read it. |
-| `409` | `IdempotentResourceUnavailable` | The resource created with this key no longer exists. |
-| `422` | `IdempotencyKeyReused` | The key was used with a different request. |
+| `403` | `MANAGEMENT_TOKEN_ISSUER_UNAUTHORIZED` | The person who issued the token is no longer an owner or administrator. |
+| `403` | `MANAGEMENT_TOKEN_WORKSPACE_MISMATCH` | `X-Workspace-ID` names a different workspace than the token's. |
+| `403` | `MANAGEMENT_TOKEN_OPERATION_NOT_ALLOWED` | Management tokens can't use this operation. |
+| `403` | `MANAGEMENT_TOKEN_PERMISSION_DENIED` | The token lacks an action. `details.missingActions` lists them, or `details.missingPermission` is `createForms`. |
+| `403` | `EMAIL_DEPENDENCY_PERMISSION_REQUIRED` | Email settings use the field you're removing or retyping, so the change also needs `email:edit`. Nothing changed. |
+| `404` | `NOT_FOUND` | The resource doesn't exist, or the token can't read the form. |
+| `409` | `SCHEMA_VERSION_CONFLICT` | The form changed after you read it. |
+| `409` | `IDEMPOTENT_RESOURCE_UNAVAILABLE` | The resource created with this key no longer exists. |
+| `422` | `IDEMPOTENCY_KEY_REUSED` | The key was used with a different request. |
 
 A request that requires several actions, such as renaming and deactivating in one `PATCH`, fails as a whole when any action is missing. Nothing changes. Changing `honeypotFieldName` requires `security:edit`; sending its current value unchanged is allowed.
 
@@ -116,11 +116,11 @@ Owners and administrators can review changes in **Activity**. Each entry shows t
 
 {/* docs-check: production-setting email.delivery */}
 
-With `email:edit`, a token can turn owner notifications on or off, choose the email field the autoresponder replies to, and change the autoresponder's subject and copy. It cannot add, remove, or change [recipients](/dashboard-guide/email-notifications#recipients); only the dashboard can. The autoresponder only replies to the address the submitter entered. Autoresponders remain limited to plans that include them, and enabling one on another plan returns `403` with `FeatureNotAvailable`.
+With `email:edit`, a token can turn owner notifications on or off, choose the email field the autoresponder replies to, and change the autoresponder's subject and copy. It cannot add, remove, or change [recipients](/dashboard-guide/email-notifications#recipients); only the dashboard can. The autoresponder only replies to the address the submitter entered. Autoresponders remain limited to plans that include them, and enabling one on another plan returns `403` with `FEATURE_NOT_AVAILABLE`.
 
 Email settings depend on the response field. Removing it, or changing it to a type other than Email, requires both `forms:edit` and `email:edit`:
 
-- Without `email:edit`, the request fails with `EmailDependencyPermissionRequired` and nothing changes.
+- Without `email:edit`, the request fails with `EMAIL_DEPENDENCY_PERMISSION_REQUIRED` and nothing changes.
 - With both actions, the change succeeds and the response includes `warnings`. Each warning names the affected feature, such as `AutoresponderResponseFieldRemoved` or `OwnerNotificationReplyToRemoved`. Formbrew never switches the autoresponder to another field and never turns it off for you. It stays enabled but can't send until someone chooses a new email field, and `GET /forms/{formId}/email-settings` reports why in `autoresponder.issue`. Submissions are still accepted and other notifications still work.
 
 Report every warning to the user, and fix it only after they approve, for example by setting a new `responseEmailFieldId`.

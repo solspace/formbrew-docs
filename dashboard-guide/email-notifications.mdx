@@ -88,6 +88,6 @@ If your workspace moves to the Free plan, saved values are kept but notification
 
 `GET /forms/{formId}/email-settings` returns `recipients`, `recipientLimit`, and an `ownerNotification` object with `subject`, `fromName`, and `customizationAvailable`. Each recipient includes `primary`, `followsOwner`, `replacesPrimary`, and `status`.
 
-`PATCH /forms/{formId}/email-settings` accepts `ownerNotification: { subject, fromName }`. Send `null` to restore a default. Setting a value on a plan without customization returns `403` with `FeatureNotAvailable`.
+`PATCH /forms/{formId}/email-settings` accepts `ownerNotification: { subject, fromName }`. Send `null` to restore a default. Setting a value on a plan without customization returns `403` with `FEATURE_NOT_AVAILABLE`.
 
 Recipients can only be added, removed, changed, or sent a new link from the dashboard. Management tokens and agents can read recipients but cannot change them.

@@ -133,9 +133,9 @@ curl "$FORMBREW_API/forms/FORM_ID/definition" \
 
 Send each field's complete settings, not only the changed ones: the definition replaces the field list. The form's status doesn't change.
 
-If the response is `409` with `SchemaVersionConflict`, someone changed the form after you read it. Read it again, compare it with your plan, and ask the user before you retry. Never resend the old definition, because it would discard their changes.
+If the response is `409` with `SCHEMA_VERSION_CONFLICT`, someone changed the form after you read it. Read it again, compare it with your plan, and ask the user before you retry. Never resend the old definition, because it would discard their changes.
 
-If the response is `403` with `EmailDependencyPermissionRequired`, email settings use a field you removed or retyped, and the token lacks `email:edit`. Nothing changed. If the response includes `warnings`, the save succeeded but left an email feature unable to work, for example an autoresponder whose response field is gone. Tell the user what each warning says and fix it only with their approval.
+If the response is `403` with `EMAIL_DEPENDENCY_PERMISSION_REQUIRED`, email settings use a field you removed or retyped, and the token lacks `email:edit`. Nothing changed. If the response includes `warnings`, the save succeeded but left an email feature unable to work, for example an autoresponder whose response field is gone. Tell the user what each warning says and fix it only with their approval.
 
 ## Deactivate or activate a form
 
@@ -152,7 +152,7 @@ curl "$FORMBREW_API/forms/FORM_ID" \
 
 Send `"ACTIVE"` to serve the form again. Activating checks that every field is valid. Both changes need `forms:activate`. Neither changes the form's fields, allowed origins, or public form tokens.
 
-Public requests to a deactivated form return `403` with `FormDeactivated`.
+Public requests to a deactivated form return `403` with `FORM_DEACTIVATED`.
 
 ## Resume after a partial failure
 
