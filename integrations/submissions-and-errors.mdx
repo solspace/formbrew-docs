@@ -80,7 +80,7 @@ Field validation stops at the first failing field, so `message` describes one pr
 | `400` | `ValidationError` | Malformed body, unknown field key, failed field rule, filled honeypot (`Submission rejected.`), or file upload |
 | `400` | `FST_ERR_CTP_INVALID_JSON_BODY` | The body is not valid JSON |
 | `401` | `Unauthorized` | The public form token is revoked or expired |
-| `402` | `PLAN_LIMIT_REACHED` | The workspace cannot accept more submissions on its current plan. Submissions only. |
+| `402` | `PlanLimitReached` | The workspace cannot accept more submissions on its current plan. Submissions only. |
 | `403` | `Forbidden` | The request origin is not an allowed origin for the form |
 | `403` | `FormDeactivated` | The form is deactivated. The message is `This form is not accepting submissions.` |
 | `404` | `NotFound` | The token is unknown, or the form is archived |

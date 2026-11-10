@@ -91,7 +91,7 @@ Exporting requires the owner, admin, or editor role, or the export capability on
 
 {/* docs-check: production-setting ai-spam-check */}
 
-While the [AI spam check](/dashboard-guide/ai-spam-check) runs, a submission's `processingState` is `pending`. Lists and exports leave it out unless you pass `includePending=true`, and changing its status, notes, or trash state returns `409` with `SUBMISSION_PENDING_CHECKS`. Every submission includes `aiSpamCheck`, which is `null` when it wasn't checked.
+While the [AI spam check](/dashboard-guide/ai-spam-check) runs, a submission's `processingState` is `pending`. Lists and exports leave it out unless you pass `includePending=true`, and changing its status, notes, or trash state returns `409` with `SubmissionPendingChecks`. Every submission includes `aiSpamCheck`, which is `null` when it wasn't checked.
 
 ## AI spam check
 
