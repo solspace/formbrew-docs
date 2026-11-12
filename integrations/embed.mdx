@@ -13,8 +13,8 @@ Load the script once, then place a `<formbrew-form>` element wherever a form sho
 <script
   crossorigin="anonymous"
   defer
-  integrity="sha384-bS/8236YCL28Esy+xfVO9ZGhArNrk+ug94IXYr06eQvusGaH8gD+b1t4UjFodU3S"
-  src="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.5.0/dist/embed.js"
+  integrity="sha384-cru3tdSGVmA5DBLgrbDjLCs1IFEUFnvcPA03zmlRW8MSdPRHYZQJNPjQxrAVxkpX"
+  src="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.6.0/dist/embed.js"
 ></script>
 
 <formbrew-form token="YOUR_PUBLIC_FORM_TOKEN"></formbrew-form>
@@ -29,7 +29,7 @@ Keep the exact package version and integrity hash together. Do not replace the v
 
 | Version | Script URL | Integrity |
 | --- | --- | --- |
-| `0.5.0` | `https://cdn.jsdelivr.net/npm/@formbrew/embed@0.5.0/dist/embed.js` | `sha384-bS/8236YCL28Esy+xfVO9ZGhArNrk+ug94IXYr06eQvusGaH8gD+b1t4UjFodU3S` |
+| `0.6.0` | `https://cdn.jsdelivr.net/npm/@formbrew/embed@0.6.0/dist/embed.js` | `sha384-cru3tdSGVmA5DBLgrbDjLCs1IFEUFnvcPA03zmlRW8MSdPRHYZQJNPjQxrAVxkpX` |
 
 ## Element attributes
 
@@ -55,8 +55,8 @@ If you disable automatic styles, keep the honeypot visually hidden. The styleshe
 ```html
 <link
   crossorigin="anonymous"
-  href="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.5.0/dist/styles.css"
-  integrity="sha384-tKw29kLUi6rEyqoeGiVxmNzcNwwkSl35vK+0mdI76D9g1aIhb2BodgSPqyH5IDeB"
+  href="https://cdn.jsdelivr.net/npm/@formbrew/embed@0.6.0/dist/styles.css"
+  integrity="sha384-KPmHdk/h6Ff/oZqcWBbYiKAju6NXddalcs8xk28Pqw7Yv6OSrj2LUul3303zwv5y"
   rel="stylesheet"
 />
 ```
@@ -151,8 +151,8 @@ A strict Content Security Policy must allow:
 
 | Directive | Source |
 | --- | --- |
-| `script-src` | `https://cdn.jsdelivr.net/npm/@formbrew/embed@0.5.0/dist/embed.js` or `https://cdn.jsdelivr.net` |
-| `style-src` | `https://cdn.jsdelivr.net/npm/@formbrew/embed@0.5.0/dist/styles.css`, `https://cdn.jsdelivr.net`, or your custom stylesheet URL |
+| `script-src` | `https://cdn.jsdelivr.net/npm/@formbrew/embed@0.6.0/dist/embed.js` or `https://cdn.jsdelivr.net` |
+| `style-src` | `https://cdn.jsdelivr.net/npm/@formbrew/embed@0.6.0/dist/styles.css`, `https://cdn.jsdelivr.net`, or your custom stylesheet URL |
 | `connect-src` | `https://api.formbrew.com` |
 
 If the script tag has a `nonce`, the loader copies it to the stylesheet link it inserts. The automatically inserted stylesheet link has no `integrity` attribute. To pin the stylesheet with Subresource Integrity, set `data-formbrew-styles="false"` and add the stylesheet link shown above.

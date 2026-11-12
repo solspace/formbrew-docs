@@ -39,7 +39,7 @@ Definition requests count toward the [request limits](/integrations/submissions-
 To check the hosted embed file and its integrity value:
 
 ```bash
-curl --silent --location https://cdn.jsdelivr.net/npm/@formbrew/embed@0.5.0/dist/embed.js \
+curl --silent --location https://cdn.jsdelivr.net/npm/@formbrew/embed@0.6.0/dist/embed.js \
   | openssl dgst -sha384 -binary | openssl base64 -A
 ```
 

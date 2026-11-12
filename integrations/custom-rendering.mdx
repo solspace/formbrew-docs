@@ -42,6 +42,8 @@ function describeField(field: PublicFormField): string {
       return `hidden input with default "${field.configJson?.defaultValue ?? ""}"`;
     case "CONFIRM":
       return `confirmation of field ${field.configJson.targetFieldId}`;
+    case "FILE":
+      return `file input, up to ${field.configJson.maxFiles} files`;
     case "CONTENT":
       return "display-only content";
     default: {
