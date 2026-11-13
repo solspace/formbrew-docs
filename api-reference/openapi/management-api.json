@@ -22180,6 +22180,16 @@
                           "successMessage": {
                             "type": "string"
                           },
+                          "successRedirectUrl": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "updatedAt": {
                             "type": "string"
                           }
@@ -22197,6 +22207,7 @@
                           "status",
                           "submitButtonLabel",
                           "successMessage",
+                          "successRedirectUrl",
                           "updatedAt"
                         ],
                         "additionalProperties": false
@@ -24626,6 +24637,16 @@
                         "successMessage": {
                           "type": "string"
                         },
+                        "successRedirectUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "updatedAt": {
                           "type": "string"
                         }
@@ -24643,6 +24664,7 @@
                         "status",
                         "submitButtonLabel",
                         "successMessage",
+                        "successRedirectUrl",
                         "updatedAt"
                       ],
                       "additionalProperties": false
@@ -27090,6 +27112,16 @@
                           "successMessage": {
                             "type": "string"
                           },
+                          "successRedirectUrl": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "updatedAt": {
                             "type": "string"
                           }
@@ -27107,6 +27139,7 @@
                           "status",
                           "submitButtonLabel",
                           "successMessage",
+                          "successRedirectUrl",
                           "updatedAt"
                         ],
                         "additionalProperties": false
@@ -29508,6 +29541,16 @@
                         "successMessage": {
                           "type": "string"
                         },
+                        "successRedirectUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "updatedAt": {
                           "type": "string"
                         }
@@ -29525,6 +29568,7 @@
                         "status",
                         "submitButtonLabel",
                         "successMessage",
+                        "successRedirectUrl",
                         "updatedAt"
                       ],
                       "additionalProperties": false
@@ -29767,6 +29811,17 @@
                   },
                   "successMessage": {
                     "type": "string"
+                  },
+                  "successRedirectUrl": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "additionalProperties": false
@@ -31963,6 +32018,16 @@
                         "successMessage": {
                           "type": "string"
                         },
+                        "successRedirectUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "updatedAt": {
                           "type": "string"
                         }
@@ -31980,6 +32045,7 @@
                         "status",
                         "submitButtonLabel",
                         "successMessage",
+                        "successRedirectUrl",
                         "updatedAt"
                       ],
                       "additionalProperties": false
@@ -34378,6 +34444,16 @@
                         "successMessage": {
                           "type": "string"
                         },
+                        "successRedirectUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "updatedAt": {
                           "type": "string"
                         }
@@ -34395,6 +34471,7 @@
                         "status",
                         "submitButtonLabel",
                         "successMessage",
+                        "successRedirectUrl",
                         "updatedAt"
                       ],
                       "additionalProperties": false
@@ -36310,6 +36387,17 @@
                       },
                       "successMessage": {
                         "type": "string"
+                      },
+                      "successRedirectUrl": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 2000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       }
                     },
                     "additionalProperties": false
@@ -38537,6 +38625,16 @@
                             "successMessage": {
                               "type": "string"
                             },
+                            "successRedirectUrl": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "updatedAt": {
                               "type": "string"
                             }
@@ -38554,6 +38652,7 @@
                             "status",
                             "submitButtonLabel",
                             "successMessage",
+                            "successRedirectUrl",
                             "updatedAt"
                           ],
                           "additionalProperties": false
@@ -41047,6 +41146,16 @@
                         "successMessage": {
                           "type": "string"
                         },
+                        "successRedirectUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "updatedAt": {
                           "type": "string"
                         }
@@ -41064,6 +41173,7 @@
                         "status",
                         "submitButtonLabel",
                         "successMessage",
+                        "successRedirectUrl",
                         "updatedAt"
                       ],
                       "additionalProperties": false
@@ -43465,6 +43575,16 @@
                         "successMessage": {
                           "type": "string"
                         },
+                        "successRedirectUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "updatedAt": {
                           "type": "string"
                         }
@@ -43482,6 +43602,7 @@
                         "status",
                         "submitButtonLabel",
                         "successMessage",
+                        "successRedirectUrl",
                         "updatedAt"
                       ],
                       "additionalProperties": false

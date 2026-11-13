@@ -52,6 +52,8 @@ An accepted submission returns `201`:
 
 You configure the message in the form settings. Managed clients reset the form and display this message by default.
 
+A [native HTML form](/integrations/html#after-a-native-submission) gets a `303` redirect instead: to the form's success redirect URL on a paid plan, or to a hosted success page that shows this message. A request is native when its body is form-encoded or multipart and its `Accept` header lists `text/html`.
+
 ## Error response
 
 Errors use this shape:
@@ -70,6 +72,8 @@ Errors use this shape:
 - `details` appears only for request-shape errors, such as a missing `values` object, and contains a list of issues.
 
 Field validation stops at the first failing field, so `message` describes one problem at a time. Always check `response.ok` or the HTTP status before treating a parsed payload as success.
+
+A native HTML form gets a hosted error page instead of JSON, with the same status code, `message`, and request ID.
 
 ## Error codes
 
@@ -132,6 +136,11 @@ Public submissions:
 - 10 per minute per form and client IP.
 - 100 per hour per form and client IP.
 - 5,000 per hour per form.
+
+Hosted success page views, the same as definition requests:
+
+- 120 per minute per form and client IP.
+- 500,000 per hour per form.
 
 Limits use fixed time windows. A limit violation returns `429`. Responses do not include rate-limit or `Retry-After` headers, so avoid automatic tight retry loops.
 

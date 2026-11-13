@@ -2271,6 +2271,7 @@
         "tags": [
           "Submissions"
         ],
+        "description": "A form-encoded or multipart post whose Accept header lists text/html is a native post from a browser. It is answered with a 303 redirect when it succeeds, and with the hosted error page when it is refused. Every other request gets JSON.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2387,8 +2388,11 @@
               }
             }
           },
+          "303": {
+            "description": "A native post succeeded. The Location header is the form's success redirect URL, when it is set, on an allowed origin and the workspace is on a paid plan; otherwise the hosted success page, GET /forms/{token}/submitted."
+          },
           "400": {
-            "description": "Default Response",
+            "description": "The error as JSON, or the hosted error page for a native post.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2410,12 +2414,17 @@
                     "message"
                   ],
                   "additionalProperties": false
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
           "401": {
-            "description": "Default Response",
+            "description": "The error as JSON, or the hosted error page for a native post.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2437,12 +2446,17 @@
                     "message"
                   ],
                   "additionalProperties": false
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
           "402": {
-            "description": "Default Response",
+            "description": "The error as JSON, or the hosted error page for a native post.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2464,12 +2478,17 @@
                     "message"
                   ],
                   "additionalProperties": false
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
           "403": {
-            "description": "Default Response",
+            "description": "The error as JSON, or the hosted error page for a native post.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2491,12 +2510,17 @@
                     "message"
                   ],
                   "additionalProperties": false
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
           "404": {
-            "description": "Default Response",
+            "description": "The error as JSON, or the hosted error page for a native post.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2519,11 +2543,16 @@
                   ],
                   "additionalProperties": false
                 }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           },
           "409": {
-            "description": "Default Response",
+            "description": "The error as JSON, or the hosted error page for a native post.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2547,11 +2576,16 @@
                   "additionalProperties": false,
                   "description": "UPLOAD_ALREADY_ATTACHED: the files were already submitted. details.submissionId and details.message are that submission's."
                 }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           },
           "413": {
-            "description": "Default Response",
+            "description": "The error as JSON, or the hosted error page for a native post.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2573,12 +2607,17 @@
                     "message"
                   ],
                   "additionalProperties": false
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
           "429": {
-            "description": "Default Response",
+            "description": "The error as JSON, or the hosted error page for a native post.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2600,12 +2639,17 @@
                     "message"
                   ],
                   "additionalProperties": false
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
           "500": {
-            "description": "Default Response",
+            "description": "The error as JSON, or the hosted error page for a native post.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2628,11 +2672,16 @@
                   ],
                   "additionalProperties": false
                 }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           },
           "503": {
-            "description": "Default Response",
+            "description": "The error as JSON, or the hosted error page for a native post.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2654,6 +2703,113 @@
                     "message"
                   ],
                   "additionalProperties": false
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/forms/{token}/submitted": {
+      "get": {
+        "summary": "Show the hosted success page",
+        "tags": [
+          "Submissions"
+        ],
+        "description": "The page a successful native form post redirects to, when the form has no success redirect URL it can use. It shows the form's success message, and a link back when the Referer is on an allowed origin.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "token",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The hosted success page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The hosted error page: the request is malformed.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The hosted error page: the token was revoked or expired.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The hosted error page: the form is deactivated.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The hosted error page: the token or form doesn't exist.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The hosted error page: too many requests.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The hosted error page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The hosted error page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }

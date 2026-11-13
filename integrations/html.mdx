@@ -34,9 +34,26 @@ A native HTML form can submit directly to Formbrew without client-side JavaScrip
 
 The browser sends `application/x-www-form-urlencoded` by default. Formbrew normalizes repeated names, such as checkbox-group values, into arrays.
 
-<Warning>
-  A successful native submission navigates to the API's JSON response. There is no success redirect or hosted success page. Use progressive enhancement if the visitor should remain on your page.
-</Warning>
+## After a native submission
+
+A native submission answers with a page, not JSON:
+
+- **Success:** the browser lands on a success page that Formbrew hosts. It shows the form's **Success message**. Refreshing it doesn't submit the form again. When the visitor posted from one of the form's allowed origins, the page links back to your site.
+- **Error:** the browser shows an error page that Formbrew hosts, with the same status code and messages as the [JSON error](/integrations/submissions-and-errors#error-response). It asks the visitor to go back and try again. Browsers usually keep typed answers when going back, but they often drop chosen files.
+
+On the Free plan, the hosted pages show a small Formbrew mark. Use progressive enhancement if the visitor should stay on your page.
+
+### Your own success page
+
+On a paid plan, you can send visitors to your own page after a successful native submission. Set **Success redirect URL** in the form settings, or `successRedirectUrl` through the Management API. The URL must be on one of the form's allowed origins.
+
+Formbrew redirects to the URL exactly as you saved it and adds nothing to it, so answers never end up in browser history or your analytics. To recognize the redirect, put your own marker in the URL, for example `https://example.com/thanks?submitted=1`.
+
+Native submissions use the hosted success page again when you remove the URL's origin from the allowed origins, or when the workspace moves to the Free plan. The URL stays saved. Errors always show the hosted error page.
+
+### How Formbrew recognizes a native submission
+
+A request is a native submission when its body is form-encoded or multipart and its `Accept` header lists `text/html`, which browsers send when they navigate. `fetch()`, the JavaScript and React SDKs, the embed, and curl don't ask for HTML, so they keep getting [JSON](/integrations/submissions-and-errors#successful-response). A JSON body always gets JSON.
 
 ## Field markup
 
@@ -122,6 +139,6 @@ Native form posts send the page origin in the `Origin` header. If your site sets
 
 If your site uses a Content Security Policy:
 
-- Native submission requires `https://api.formbrew.com` in `form-action`.
+- Native submission requires `https://api.formbrew.com` in `form-action`. With a success redirect URL, also add the URL's origin, or `'self'` when it's the same site: browsers apply `form-action` to the redirect that follows the post.
 - Progressive enhancement requires `https://api.formbrew.com` in `connect-src`.
 - The generated honeypot wrapper uses an inline `style` attribute. If your policy blocks inline styles, hide the wrapper with a class in your own stylesheet instead.

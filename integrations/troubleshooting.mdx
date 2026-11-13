@@ -8,7 +8,7 @@ Most integration failures come from the public-access setup: the allowed origins
 ## Collect the facts
 
 1. Open the page that contains the form, then open the browser developer tools.
-2. In the **Network** panel, find the request to `api.formbrew.com` and note its status code and JSON response. The `error` and `message` properties identify the problem.
+2. In the **Network** panel, find the request to `api.formbrew.com` and note its status code and JSON response. The `error` and `message` properties identify the problem. A plain HTML form shows the same message on its hosted error page instead.
 3. Note the `requestId` from the response body or the `X-Request-ID` response header if you need to report the problem.
 4. In the **Console** panel, look for Content Security Policy, integrity, or JavaScript errors.
 5. For the hosted embed, inspect the `<formbrew-form>` element. Its `data-formbrew-state` attribute is `loading`, `ready`, or `error`.
