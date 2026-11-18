@@ -38,7 +38,7 @@ The browser sends `application/x-www-form-urlencoded` by default. Formbrew norma
 
 A native submission answers with a page, not JSON:
 
-- **Success:** the browser lands on a success page that Formbrew hosts. It shows the form's **Success message**. Refreshing it doesn't submit the form again. When the visitor posted from one of the form's allowed origins, the page links back to your site.
+- **Success:** the browser lands on a success page that Formbrew hosts. It shows the form's **Success message**. Refreshing it doesn't submit the form again. If the page can't be shown later, for example because you deactivated the form, it says that the submission was received and doesn't need sending again. When the visitor posted from one of the form's allowed origins, the page links back to your site.
 - **Error:** the browser shows an error page that Formbrew hosts, with the same status code and messages as the [JSON error](/integrations/submissions-and-errors#error-response). It asks the visitor to go back and try again. Browsers usually keep typed answers when going back, but they often drop chosen files.
 
 On the Free plan, the hosted pages show a small Formbrew mark. Use progressive enhancement if the visitor should stay on your page.
