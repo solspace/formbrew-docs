@@ -43,6 +43,8 @@ Setting `status` to `ACTIVE` checks that every field definition is valid. It doe
 
 The definition operation requires `expectedSchemaVersion` and `expectedStatus`. If the form changed since you read it, the request returns `409` with `SCHEMA_VERSION_CONFLICT`. The operation deletes fields you leave out of the list.
 
+An existing field keeps its key when you leave `key` out. A new field without a `key` gets one from its label. An empty `key` creates one from the label for any field, so it can rename an existing field. When another field already uses a key, Formbrew adds a suffix such as `_1` to the new or changed key. Changing a key changes what submissions and webhooks use, so see [Field keys](/dashboard-guide/form-builder#field-keys) first.
+
 Archiving, with `DELETE` or by setting `status` to `ARCHIVED`, removes a form from list and retrieval operations. Every operation on an archived form returns `404`, including its submission operations. Formbrew keeps the submissions. People can [restore an archived form](/dashboard-guide/forms#restore-an-archived-form) in the dashboard, and it returns as `DEACTIVATED`.
 
 ## Form fields
